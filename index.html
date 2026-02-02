@@ -54,7 +54,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Error overlay for debugging deployment issues */
         #deployment-error {
             display: none;
             position: fixed;
@@ -64,14 +63,17 @@
             padding: 2rem;
             z-index: 9999;
             font-family: monospace;
+            text-align: center;
+            justify-content: center;
+            flex-direction: column;
         }
     </style>
 </head>
 <body>
-    <!-- Fallback error UI for unexpected JS crashes -->
-    <div id="deployment-error">
+    <div id="deployment-error" class="flex">
         <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Application Failed to Start</h1>
-        <p id="error-message"></p>
+        <p id="error-message" class="text-slate-400"></p>
+        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl">Retry Connection</button>
     </div>
 
     <div id="app" v-cloak>
@@ -108,7 +110,7 @@
         <!-- Login Page -->
         <div v-if="authState === 'login'" class="min-h-screen flex items-center justify-center p-6 animate-in">
             <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl">
-                <div class="flex flex-col items-center mb-10">
+                <div class="flex flex-col items-center mb-10 text-center">
                     <kaizen-logo size="32"></kaizen-logo>
                     <h2 class="text-3xl font-black text-white mt-6 tracking-tighter">Welcome Back</h2>
                     <p class="text-slate-500 text-sm mt-1">Enter your credentials to continue.</p>
@@ -132,10 +134,13 @@
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all">Sign In</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all">
+                        <span v-if="isLoadingAuth" class="flex items-center justify-center gap-2"><i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Processing...</span>
+                        <span v-else>Sign In</span>
+                    </button>
                 </form>
                 
-                <p class="text-center mt-8 text-slate-500 text-sm">
+                <p class="text-center mt-8 text-slate-500 text-sm font-medium">
                     New to Kaizen? <button @click="authState = 'register'" class="text-indigo-400 font-bold hover:underline">Create an account</button>
                 </p>
                 <button @click="authState = 'landing'" class="w-full mt-4 text-slate-600 text-xs font-bold uppercase tracking-widest hover:text-slate-400 transition-colors">Back to Landing</button>
@@ -145,7 +150,7 @@
         <!-- Register Page -->
         <div v-if="authState === 'register'" class="min-h-screen flex items-center justify-center p-6 animate-in">
             <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl">
-                <div class="flex flex-col items-center mb-8">
+                <div class="flex flex-col items-center mb-8 text-center">
                     <kaizen-logo size="32"></kaizen-logo>
                     <h2 class="text-3xl font-black text-white mt-6 tracking-tighter">Join Kaizen</h2>
                     <p class="text-slate-500 text-sm mt-1">Start your journey to debt freedom.</p>
@@ -187,10 +192,13 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4.5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all mt-4">Create Account</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4.5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all mt-4">
+                        <span v-if="isLoadingAuth" class="flex items-center justify-center gap-2"><i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Creating...</span>
+                        <span v-else>Create Account</span>
+                    </button>
                 </form>
                 
-                <p class="text-center mt-6 text-slate-500 text-sm">
+                <p class="text-center mt-6 text-slate-500 text-sm font-medium">
                     Already have an account? <button @click="authState = 'login'" class="text-indigo-400 font-bold hover:underline">Login here</button>
                 </p>
                 <button @click="authState = 'landing'" class="w-full mt-4 text-slate-600 text-xs font-bold uppercase tracking-widest hover:text-slate-400 transition-colors">Back to Landing</button>
@@ -206,13 +214,13 @@
                     <div class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><i data-lucide="arrow-up-right" class="w-5 h-5"></i></div>
                     <span class="text-lg font-black tracking-tighter">Kaizen Finance</span>
                 </div>
-                <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-slate-400 bg-slate-800 rounded-lg">
+                <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-slate-400 bg-slate-800 rounded-lg shadow-lg">
                     <i :data-lucide="isMobileMenuOpen ? 'x' : 'menu'"></i>
                 </button>
             </div>
 
             <!-- Sidebar -->
-            <aside :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 w-72 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 flex flex-col z-[60] transition-transform duration-300 lg:translate-x-0 lg:static h-screen">
+            <aside :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 w-80 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 flex flex-col z-[60] transition-transform duration-300 lg:translate-x-0 lg:static h-screen">
                 <div class="p-8 pb-4 flex items-center gap-3 shrink-0">
                     <div class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white rotate-3 shadow-lg"><i data-lucide="arrow-up-right" class="w-6 h-6"></i></div>
                     <div class="text-left text-white">
@@ -221,38 +229,37 @@
                     </div>
                 </div>
 
-                <!-- Scrollable Menu -->
                 <div class="flex-1 overflow-y-auto px-8 py-4 custom-scrollbar">
                     <nav class="flex flex-col gap-2">
                         <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 text-left">Main</p>
-                        <button v-for="item in navItems" :key="item.id" @click="navigateTo(item.id)" :class="currentPage === item.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+                        <button v-for="item in navItems" :key="item.id" @click="navigateTo(item.id)" :class="currentPage === item.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
                             <i :data-lucide="item.icon" class="w-5 h-5"></i>
                             <span class="font-semibold text-sm">{{ item.label }}</span>
                         </button>
                         
                         <div class="h-px bg-slate-800 my-4"></div>
                         <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 text-left">Categories</p>
-                        <button v-for="cat in categories" :key="cat.id" @click="navigateTo(cat.id)" :class="currentPage === cat.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+                        <button v-for="cat in categories" :key="cat.id" @click="navigateTo(cat.id)" :class="currentPage === cat.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
                             <i :data-lucide="cat.icon" class="w-5 h-5"></i>
                             <span class="font-semibold text-sm">{{ cat.label }}</span>
                         </button>
                     </nav>
                 </div>
 
-                <!-- Bottom Stats & Profile -->
+                <!-- Profile and Goal section -->
                 <div class="p-6 space-y-4 bg-slate-900/30 border-t border-slate-800/50">
-                    <div class="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800">
+                    <div class="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800 shadow-inner">
                         <div class="flex justify-between mb-3 text-white">
                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Goal</span>
                             <span class="text-indigo-400 font-black text-xs">{{ progressPercent }}%</span>
                         </div>
                         <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5">
-                            <div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-1000" :style="{ width: progressPercent + '%' }"></div>
+                            <div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_#6366f1]" :style="{ width: progressPercent + '%' }"></div>
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-4 glass rounded-[1.5rem] shadow-xl">
                         <div class="flex items-center gap-4 flex-1 min-w-0">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white">{{ userInitial }}</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white shadow-lg">{{ userInitial }}</div>
                             <div class="text-left min-w-0">
                                 <p class="text-sm font-black text-white truncate w-full capitalize leading-tight mb-1">{{ userName }}</p>
                                 <div class="flex items-center gap-1 text-[9px] text-emerald-500 font-black uppercase"><i data-lucide="shield-check" class="w-3 h-3"></i> Destroyer</div>
@@ -264,12 +271,12 @@
             </aside>
 
             <!-- Main Content Area -->
-            <main class="flex-1 p-6 md:p-12 lg:p-16 max-w-[1400px] w-full mx-auto h-screen overflow-y-auto custom-scrollbar animate-in">
+            <main class="flex-1 p-6 md:p-12 lg:p-16 max-w-[1400px] w-full mx-auto h-screen overflow-y-auto custom-scrollbar animate-in text-left">
                 
                 <!-- Dashboard View -->
                 <div v-if="currentPage === 'dashboard'" class="space-y-8">
                     <!-- Journey Track -->
-                    <div class="glass p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
+                    <div class="glass p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
                         <div class="flex items-center justify-between mb-12">
                             <div class="text-left text-white">
                                 <h2 class="text-2xl font-black tracking-tight flex items-center gap-3"><i data-lucide="trophy" class="text-amber-500"></i> Journey to Freedom</h2>
@@ -277,12 +284,12 @@
                             </div>
                             <div class="text-right">
                                 <span class="text-5xl font-black text-indigo-500 tracking-tighter">{{ progressPercent }}%</span>
-                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Total Completion</p>
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 text-right">Total Completion</p>
                             </div>
                         </div>
                         <div class="relative pt-10 pb-16 px-4">
                             <div class="h-4 w-full bg-slate-900 rounded-full border border-slate-700 overflow-hidden p-1">
-                                <div class="h-full bg-gradient-to-r from-indigo-600 via-indigo-400 to-emerald-400 rounded-full transition-all duration-1000 shadow-sm" :style="{ width: progressPercent + '%' }"></div>
+                                <div class="h-full bg-gradient-to-r from-indigo-600 via-indigo-400 to-emerald-400 rounded-full transition-all duration-1000 shadow-[0_0_15px_#6366f1]" :style="{ width: progressPercent + '%' }"></div>
                             </div>
                             <div class="absolute inset-x-4 top-10 h-full pointer-events-none text-center flex justify-between">
                                 <div v-for="marker in markers" :key="marker.p" :style="{ left: marker.p + '%' }" class="absolute top-0 flex flex-col items-center -translate-x-1/2">
@@ -295,37 +302,38 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-8 flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-900/50 w-fit px-4 py-2 rounded-full border border-slate-700">
-                            <i data-lucide="check-circle-2" class="text-emerald-500 w-4 h-4"></i> Total Kaizen: <span class="text-slate-200 ml-1">£{{ totalPaid.toLocaleString() }} paid</span>
+                        <div class="mt-8 flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-900/50 w-fit px-4 py-2 rounded-full border border-slate-700 shadow-inner">
+                            <i data-lucide="check-circle-2" class="text-emerald-500 w-4 h-4"></i> Total Kaizen: <span class="text-slate-200 ml-1 font-black uppercase tracking-widest">£{{ totalPaid.toLocaleString() }} paid</span>
                         </div>
                     </div>
 
                     <!-- Core Stats -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div v-for="stat in mainStats" :key="stat.title" class="glass p-6 rounded-[2rem] text-left">
-                            <div :class="stat.color" class="p-3 rounded-2xl text-white w-fit mb-4 shadow-inner"><i :data-lucide="stat.icon"></i></div>
-                            <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest text-left">{{ stat.title }}</h3>
+                        <div v-for="stat in mainStats" :key="stat.title" class="glass p-6 rounded-[2rem] text-left hover:border-indigo-500/30 transition-all group">
+                            <div :class="stat.color" class="p-3 rounded-2xl text-white w-fit mb-4 shadow-inner group-hover:scale-110 transition-transform"><i :data-lucide="stat.icon"></i></div>
+                            <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest text-left">{{ stat.title }}</h3>
                             <div class="flex items-baseline gap-1 mt-1 text-white"><span class="text-3xl font-black">£{{ stat.value.toLocaleString() }}</span></div>
                             <p class="text-[10px] text-slate-500 mt-2 font-medium flex items-center gap-1"><i data-lucide="shield-check" class="text-emerald-500 w-3 h-3"></i> {{ stat.sub }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
-                        <div class="glass p-8 rounded-[2.5rem] text-left">
-                            <h2 class="text-xl font-black text-white mb-8 flex items-center gap-2"><i data-lucide="filter" class="text-indigo-400"></i> Category Progress</h2>
+                        <!-- Repayment Focused Categories -->
+                        <div class="glass p-8 rounded-[2.5rem] text-left shadow-xl">
+                            <h2 class="text-xl font-black text-white mb-8 flex items-center gap-2"><i data-lucide="filter" class="text-indigo-400"></i> Repayment Progress</h2>
                             <div class="space-y-4">
                                 <div v-for="(stat, key) in categoryProgress" :key="key" @click="navigateTo(stat.id)" class="group flex items-center justify-between p-5 rounded-2xl hover:bg-slate-700/50 cursor-pointer border border-transparent hover:border-slate-700 transition-all active:scale-[0.98]">
-                                    <div class="flex items-center gap-4">
-                                        <div :class="stat.colorClass" class="p-3 rounded-xl text-white"><i :data-lucide="stat.icon"></i></div>
-                                        <div>
-                                            <p class="font-black text-slate-200 text-sm">{{ key }}s</p>
-                                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">£{{ stat.paid.toLocaleString() }} paid</p>
+                                    <div class="flex items-center gap-4 text-left">
+                                        <div :class="stat.colorClass" class="p-3 rounded-xl text-white shadow-lg"><i :data-lucide="stat.icon"></i></div>
+                                        <div class="text-left">
+                                            <p class="font-black text-slate-200 text-sm text-left">{{ key }}s</p>
+                                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight text-left">£{{ stat.paid.toLocaleString() }} cleared</p>
                                         </div>
                                     </div>
                                     <div class="text-right flex items-center gap-6">
-                                        <div>
-                                            <p class="font-black text-white">£{{ stat.balance.toLocaleString() }}</p>
-                                            <div class="flex items-center gap-2 mt-1.5">
+                                        <div class="text-right">
+                                            <p class="font-black text-white text-right">£{{ stat.balance.toLocaleString() }}</p>
+                                            <div class="flex items-center gap-2 mt-1.5 justify-end">
                                                 <div class="w-20 h-1.5 bg-slate-900 rounded-full overflow-hidden">
                                                     <div :class="stat.colorClass" class="h-full transition-all duration-1000" :style="{ width: stat.pct + '%' }"></div>
                                                 </div>
@@ -338,181 +346,166 @@
                             </div>
                         </div>
 
+                        <!-- Momentum Control -->
                         <div class="bg-indigo-950/50 text-white p-10 rounded-[2.5rem] border border-indigo-500/20 shadow-2xl relative overflow-hidden flex flex-col justify-between">
                             <div class="relative z-10 text-left">
-                                <h3 class="text-3xl font-black mb-2 tracking-tight italic">Momentum Engine</h3>
-                                <p class="text-indigo-300 text-sm mb-10 leading-relaxed">Boost your monthly payments to crush debt through Kaizen.</p>
+                                <h3 class="text-3xl font-black mb-2 tracking-tight italic text-left">Momentum Engine</h3>
+                                <p class="text-indigo-300 text-sm mb-10 leading-relaxed text-left">Inject surplus cash to accelerate your freedom date.</p>
                                 <div class="space-y-10">
-                                    <div>
+                                    <div class="text-left">
                                         <div class="flex justify-between items-end mb-4 text-left">
-                                            <span class="text-indigo-400 font-bold text-xs uppercase tracking-widest">Monthly Surplus</span>
-                                            <div class="text-right"><span class="text-4xl font-black text-white">£{{ extraPayment }}</span></div>
+                                            <span class="text-indigo-400 font-bold text-xs uppercase tracking-widest text-left">Monthly Power-Up</span>
+                                            <div class="text-right text-white"><span class="text-4xl font-black text-white">£{{ extraPayment }}</span></div>
                                         </div>
-                                        <input type="range" min="0" max="5000" step="50" v-model.number="extraPayment" class="w-full h-3 bg-indigo-900 rounded-lg appearance-none cursor-pointer accent-white border border-indigo-800">
+                                        <input type="range" min="0" max="5000" step="50" v-model.number="extraPayment" class="w-full h-3 bg-indigo-900 rounded-lg appearance-none cursor-pointer accent-white border border-indigo-800 shadow-xl">
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
-                                        <button @click="strategy = 'snowball'" :class="strategy === 'snowball' ? 'bg-indigo-500 text-white border-indigo-400' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Snowball</button>
-                                        <button @click="strategy = 'avalanche'" :class="strategy === 'avalanche' ? 'bg-indigo-500 text-white border-indigo-400' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Avalanche</button>
+                                        <button @click="strategy = 'snowball'" :class="strategy === 'snowball' ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Snowball</button>
+                                        <button @click="strategy = 'avalanche'" :class="strategy === 'avalanche' ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Avalanche</button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="absolute -bottom-20 -right-20 text-indigo-500/5 rotate-12 pointer-events-none"><i data-lucide="arrow-up-right" class="w-[400px] h-[400px]"></i></div>
+                            <div class="absolute -bottom-20 -right-20 text-indigo-500/5 rotate-12 pointer-events-none"><i data-lucide="zap" class="w-[400px] h-[400px]"></i></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Info Academy View -->
-                <div v-if="currentPage === 'info'" class="space-y-12 animate-in text-left">
-                    <h2 class="text-4xl font-black text-white tracking-tight flex items-center gap-3"><i data-lucide="lightbulb" class="text-amber-400"></i> Kaizen Academy</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="glass p-10 rounded-[2.5rem]">
-                            <div class="bg-indigo-500/10 p-4 w-fit rounded-2xl mb-6 text-indigo-400"><i data-lucide="zap"></i></div>
-                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight">The Kaizen Philosophy</h3>
-                            <p class="text-slate-400 leading-relaxed">Kaizen means <span class="text-white font-bold">"change for the better."</span> It prioritizes consistent, incremental improvements. A £5 payment today is better than £0 tomorrow.</p>
-                        </div>
-                        <div class="glass p-10 rounded-[2.5rem]">
-                            <div class="bg-emerald-500/10 p-4 w-fit rounded-2xl mb-6 text-emerald-400"><i data-lucide="shield-check"></i></div>
-                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight">Debt is Math</h3>
-                            <p class="text-slate-400 leading-relaxed">Debt is simply a variable. You are not "bad with money"; you are solving a puzzle. Once the variables align, the debt disappears.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Category Items View -->
-                <div v-if="isCategoryPage" class="animate-in space-y-8">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                        <div class="flex items-center gap-5">
-                            <div :class="activeCategoryColor" class="p-4 rounded-[1.5rem] text-white shadow-lg"><i :data-lucide="activeCategoryIcon" class="w-8 h-8"></i></div>
+                <!-- Category Items -->
+                <div v-if="isCategoryPage" class="animate-in space-y-8 text-left">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
+                        <div class="flex items-center gap-6 text-left">
+                            <div :class="activeCategoryColor" class="p-4 rounded-[1.5rem] text-white shadow-2xl rotate-3"><i :data-lucide="activeCategoryIcon" class="w-10 h-10"></i></div>
                             <div class="text-left">
-                                <h2 class="text-3xl font-black text-white tracking-tight">{{ activeCategoryTitle }}</h2>
-                                <p class="text-slate-500 text-sm font-medium">Current Owed: <span class="text-white font-bold">£{{ activeCategoryTotal.toLocaleString() }}</span></p>
+                                <h2 class="text-4xl font-black text-white tracking-tighter text-left">{{ activeCategoryTitle }}</h2>
+                                <p class="text-slate-500 text-sm font-medium text-left italic">Total Outstanding: <span class="text-white font-bold not-italic">£{{ activeCategoryTotal.toLocaleString() }}</span></p>
                             </div>
                         </div>
-                        <button @click="handleAddDebt(activeCategoryKey)" class="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
-                            <i data-lucide="plus"></i> Add Entry
+                        <button @click="handleAddDebt(activeCategoryKey)" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl active:scale-95 border border-white/5 group">
+                            <i data-lucide="plus-circle" class="group-hover:rotate-90 transition-transform"></i> Add New Data Point
                         </button>
                     </div>
 
-                    <div class="space-y-4">
+                    <div class="space-y-4 text-left">
                         <div v-if="filteredDebts.length === 0" class="glass border-2 border-dashed border-slate-700/50 py-20 rounded-[2.5rem] text-center flex flex-col items-center gap-4">
-                            <i data-lucide="target" class="w-10 h-10 text-slate-600"></i>
-                            <p class="text-slate-600 font-bold uppercase tracking-widest text-xs">Category Clear</p>
+                            <i data-lucide="target" class="w-12 h-12 text-slate-700"></i>
+                            <p class="text-slate-600 font-bold uppercase tracking-widest text-xs">This variable is cleared.</p>
                         </div>
-                        <div v-for="debt in filteredDebts" :key="debt.id" class="bg-slate-800/80 p-6 md:p-8 rounded-[2rem] border border-slate-700/50 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 hover:shadow-xl transition-all border-l-4" :style="{ borderLeftColor: 'currentColor' }">
+                        <div v-for="debt in filteredDebts" :key="debt.id" class="bg-slate-800/80 p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 transition-all border-l-[6px]" :style="{ borderLeftColor: 'currentColor' }">
                             <div class="flex-1 w-full text-left">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <input v-model="debt.name" @change="handleUpdateDebt(debt.id, 'name', debt.name)" class="text-xl font-black bg-slate-900/50 focus:bg-slate-900 border-b-2 border-transparent focus:border-indigo-500 transition-all p-2 w-full rounded-t-lg outline-none text-white" placeholder="Enter name...">
-                                    <button @click="activePaymentDebt = debt" class="p-2.5 bg-slate-700/50 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-bold text-xs shrink-0">
-                                        <i data-lucide="history" class="w-4 h-4"></i> <span>Payments</span>
+                                <div class="flex items-center gap-3 mb-6 text-left">
+                                    <input v-model="debt.name" @change="handleUpdateDebt(debt.id, 'name', debt.name)" class="text-2xl font-black bg-slate-900/50 focus:bg-slate-900 border-b-2 border-transparent focus:border-indigo-500 transition-all p-3 w-full rounded-t-xl outline-none text-white shadow-inner" placeholder="Label...">
+                                    <button @click="activePaymentDebt = debt" class="p-3 bg-slate-700/50 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 rounded-2xl transition-all flex items-center gap-2 font-black text-xs shrink-0 uppercase tracking-widest">
+                                        <i data-lucide="history" class="w-5 h-5"></i> <span>History</span>
                                     </button>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-4">
-                                    <div class="flex items-center gap-2 text-xs font-black text-slate-500 bg-slate-900/50 px-3 py-2 rounded-xl border border-slate-700">
-                                        <i data-lucide="pie-chart" class="text-indigo-400 w-4 h-4"></i> 
-                                        <span class="mr-1">APR:</span>
-                                        <input type="number" v-model.number="debt.interest" @change="handleUpdateDebt(debt.id, 'interest', debt.interest)" class="w-10 bg-transparent border-none outline-none text-slate-300 font-black">%
+                                <div class="flex flex-wrap items-center gap-5 text-left">
+                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5 text-left">
+                                        <i data-lucide="percent" class="text-indigo-400 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">APR:</span>
+                                        <input type="number" v-model.number="debt.interest" @change="handleUpdateDebt(debt.id, 'interest', debt.interest)" class="w-12 bg-transparent outline-none text-slate-100 font-black text-sm">%
                                     </div>
-                                    <div class="flex items-center gap-2 text-xs font-black text-slate-500 bg-slate-900/50 px-3 py-2 rounded-xl border border-slate-700">
-                                        <i data-lucide="calendar" class="text-amber-500 w-4 h-4"></i> 
-                                        <span class="mr-1">MIN:</span>
-                                        £<input type="number" v-model.number="debt.minPayment" @change="handleUpdateDebt(debt.id, 'minPayment', debt.minPayment)" class="w-16 bg-transparent border-none outline-none text-slate-300 font-black">
+                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5 text-left">
+                                        <i data-lucide="clock" class="text-amber-500 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">Min:</span>
+                                        <span class="text-white text-sm">£</span><input type="number" v-model.number="debt.minPayment" @change="handleUpdateDebt(debt.id, 'minPayment', debt.minPayment)" class="w-20 bg-transparent outline-none text-slate-100 font-black text-sm">
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 border-slate-700 pt-6 md:pt-0">
-                                <div class="text-right flex-1 md:flex-none">
-                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Current Owed</p>
-                                    <div class="flex items-center justify-end gap-1 bg-slate-900/50 px-4 py-2 rounded-2xl border border-slate-700 focus-within:border-indigo-500/50 transition-all">
-                                        <span class="text-2xl font-black text-slate-600">£</span>
-                                        <input type="number" v-model.number="debt.balance" @change="handleUpdateDebt(debt.id, 'balance', debt.balance)" class="text-3xl font-black text-white bg-transparent border-none outline-none w-32 text-right">
+                            <div class="flex items-center gap-10 w-full md:w-auto border-t md:border-t-0 border-slate-700 pt-8 md:pt-0 justify-end">
+                                <div class="text-right flex-1 md:flex-none text-right">
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 text-right">Current Value</p>
+                                    <div class="flex items-center justify-end gap-2 bg-slate-900/80 px-6 py-4 rounded-3xl border border-white/5 shadow-inner focus-within:border-indigo-500/50 transition-all text-right">
+                                        <span class="text-2xl font-black text-slate-600 leading-none">£</span>
+                                        <input type="number" v-model.number="debt.balance" @change="handleUpdateDebt(debt.id, 'balance', debt.balance)" class="text-4xl font-black text-white bg-transparent border-none outline-none w-36 text-right leading-none">
                                     </div>
                                 </div>
-                                <button @click="handleDeleteDebt(debt.id)" class="p-4 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all">
-                                    <i data-lucide="trash-2"></i>
-                                </button>
+                                <button @click="handleDeleteDebt(debt.id)" class="p-5 glass text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all shadow-xl"><i data-lucide="trash-2" class="w-6 h-6"></i></button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Academy -->
+                <div v-if="currentPage === 'info'" class="space-y-12 animate-in text-left">
+                    <h2 class="text-4xl font-black text-white tracking-tighter flex items-center gap-4"><i data-lucide="lightbulb" class="text-amber-400 w-10 h-10"></i> Kaizen Academy</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 text-left">
+                        <div class="glass p-10 rounded-[3rem] shadow-2xl text-left border-l-4 border-indigo-500">
+                            <div class="bg-indigo-500/10 p-4 w-fit rounded-2xl mb-6 text-indigo-400"><i data-lucide="zap" class="w-8 h-8"></i></div>
+                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight text-left">The Kaizen Philosophy</h3>
+                            <p class="text-slate-400 leading-relaxed text-left text-lg">Freedom is won through <span class="text-white font-bold italic underline decoration-indigo-500 decoration-2 underline-offset-4">incremental change</span>. Compounding debt requires compounding aggression. A £10 extra payment today changes the trajectory of your entire year.</p>
+                        </div>
+                        <div class="glass p-10 rounded-[3rem] shadow-2xl text-left border-l-4 border-emerald-500">
+                            <div class="bg-emerald-500/10 p-4 w-fit rounded-2xl mb-6 text-emerald-400"><i data-lucide="shield-check" class="w-8 h-8"></i></div>
+                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight text-left">Mindset Shift</h3>
+                            <p class="text-slate-400 leading-relaxed text-left text-lg">Debt is simply math in reverse. You aren't "behind"; you are solves a puzzle where the numbers currently favor the bank. By logging every payment, you reclaim the math.</p>
                         </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- Payment History Modal -->
-        <div v-if="activePaymentDebt" class="fixed inset-0 z-[100] flex items-center justify-end bg-slate-950/80 backdrop-blur-md animate-in">
-            <div class="w-full max-w-md h-full bg-slate-900 border-l border-slate-800 shadow-2xl p-8 flex flex-col transition-transform duration-500">
-                <div class="flex justify-between items-center mb-8 text-left">
+        <!-- History Modal -->
+        <div v-if="activePaymentDebt" class="fixed inset-0 z-[100] flex items-center justify-end bg-slate-950/90 backdrop-blur-xl animate-in">
+            <div class="w-full max-w-md h-full bg-slate-900 border-l border-white/5 shadow-2xl p-10 flex flex-col transition-transform duration-500">
+                <div class="flex justify-between items-center mb-12 text-left">
                     <div class="text-left text-white">
-                        <h3 class="text-2xl font-black">Payment Log</h3>
-                        <p class="text-slate-500 text-sm font-medium">{{ activePaymentDebt.name }}</p>
+                        <h3 class="text-3xl font-black tracking-tighter">Injection Log</h3>
+                        <p class="text-slate-500 text-sm font-bold mt-2 uppercase tracking-widest border-b border-indigo-500/30 pb-2">{{ activePaymentDebt.name }}</p>
                     </div>
-                    <button @click="activePaymentDebt = null" class="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400"><i data-lucide="x"></i></button>
+                    <button @click="activePaymentDebt = null" class="p-3 bg-slate-800 rounded-2xl text-slate-400 hover:text-white transition-all shadow-xl"><i data-lucide="x"></i></button>
                 </div>
-
-                <form @submit.prevent="handleAddPayment" class="bg-slate-800/50 p-6 rounded-[2rem] border border-slate-700/50 mb-8 text-left">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Record New Payment</label>
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-700 focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
-                            <span class="text-2xl font-black text-slate-600">£</span>
-                            <input v-model.number="paymentAmount" type="number" step="0.01" required placeholder="0.00" class="w-full text-2xl font-black focus:outline-none bg-transparent text-white">
+                <form @submit.prevent="handleAddPayment" class="p-8 rounded-[2.5rem] bg-indigo-600/5 border border-indigo-500/10 mb-12 text-left shadow-2xl">
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-4 bg-slate-950 p-5 rounded-3xl border border-white/5 focus-within:ring-2 focus-within:ring-indigo-500 shadow-inner">
+                            <span class="text-3xl font-black text-slate-600">£</span>
+                            <input v-model.number="paymentAmount" type="number" step="0.01" required placeholder="0.00" class="w-full text-4xl font-black focus:outline-none bg-transparent text-white">
                         </div>
-                        <div class="flex items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                            <i data-lucide="calendar" class="text-slate-500"></i>
+                        <div class="flex items-center gap-4 bg-slate-950 p-5 rounded-3xl border border-white/5">
+                            <i data-lucide="calendar" class="text-slate-500 w-6 h-6"></i>
                             <input v-model="paymentDate" type="date" required class="w-full font-bold text-slate-300 focus:outline-none bg-transparent [color-scheme:dark]">
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-lg active:scale-95 transition-all">
-                            <i data-lucide="check-circle-2" class="w-5 h-5"></i> Confirm Payment
-                        </button>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 rounded-3xl font-black text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)] active:scale-95 transition-all uppercase tracking-widest">Confirm Injection</button>
                     </div>
                 </form>
-
-                <div class="flex-1 overflow-y-auto custom-scrollbar">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 text-left">Transaction History</label>
-                    <div class="space-y-3 pb-8 text-left">
-                        <div v-for="pay in sortedPayments" :key="pay.id" class="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700/50 rounded-2xl">
-                            <div class="flex items-center gap-3">
-                                <div class="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><i data-lucide="receipt" class="w-4 h-4"></i></div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar pr-4 text-left">
+                    <div class="space-y-4 pb-10 text-left">
+                        <div v-for="pay in sortedPayments" :key="pay.id" class="flex items-center justify-between p-5 glass rounded-[2rem] border-white/5 text-left group">
+                            <div class="flex items-center gap-4 text-left">
+                                <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform"><i data-lucide="check" class="w-5 h-5"></i></div>
                                 <div class="text-left">
-                                    <p class="font-black text-slate-200 text-sm">£{{ pay.amount.toLocaleString() }}</p>
-                                    <p class="text-[10px] text-slate-500 font-bold">{{ pay.date }}</p>
+                                    <p class="font-black text-white text-xl leading-none mb-1">£{{ pay.amount.toLocaleString() }}</p>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ pay.date }}</p>
                                 </div>
                             </div>
-                            <span class="text-[10px] font-black text-emerald-400 uppercase bg-emerald-500/10 px-2 py-1 rounded">Paid</span>
-                        </div>
-                        <div v-if="!activePaymentDebt.payments || activePaymentDebt.payments.length === 0" class="text-center py-10 opacity-30 flex flex-col items-center">
-                            <i data-lucide="history" class="w-10 h-10 mb-2 text-slate-400"></i>
-                            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">No history</p>
+                            <span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-3 py-1 rounded-full shadow-lg border border-emerald-500/20">Crushed</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Notification Toast -->
-        <div v-if="notification" class="fixed bottom-8 right-8 z-[110] bg-indigo-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in">
-            <i data-lucide="check-circle-2" class="text-indigo-200"></i>
-            <span class="font-bold text-sm">{{ notification }}</span>
+        <!-- Notification -->
+        <div v-if="notification" class="fixed bottom-10 right-10 z-[110] bg-indigo-600 text-white px-8 py-5 rounded-full shadow-[0_0_50px_rgba(99,102,241,0.5)] flex items-center gap-4 animate-in border border-white/20">
+            <i data-lucide="zap" class="text-indigo-200 w-6 h-6"></i>
+            <span class="font-black text-base tracking-tight italic uppercase">{{ notification }}</span>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK Modules -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, query } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // Add error boundary for Telegram Mini Apps
-        window.onerror = function(msg, url, line, col, error) {
-            document.getElementById('deployment-error').style.display = 'block';
-            document.getElementById('error-message').innerText = msg + ' at ' + url + ':' + line;
+        // Global error capture
+        window.onerror = function(msg, url, line) {
+            const errEl = document.getElementById('deployment-error');
+            if(errEl) {
+                errEl.style.display = 'flex';
+                document.getElementById('error-message').innerText = `Critical Initialization Failure: ${msg}`;
+            }
         };
 
-        let firebaseConfig;
-        try {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } catch (e) {
-            console.error("Firebase config missing or invalid");
-            firebaseConfig = {}; // Fallback to avoid crash
-        }
+        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const firebaseConfig = JSON.parse(configStr);
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -526,7 +519,7 @@
             template: `
                 <div class="relative flex items-center justify-center" :style="{ width: parseInt(size) + 16 + 'px', height: parseInt(size) + 16 + 'px' }">
                     <div class="absolute inset-0 bg-indigo-600 rounded-[1.25rem] rotate-6 opacity-20 animate-pulse"></div>
-                    <div class="relative w-full h-full bg-indigo-600 rounded-[1.25rem] flex items-center justify-center text-white shadow-xl shadow-indigo-900/40">
+                    <div class="relative w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[1.25rem] flex items-center justify-center text-white shadow-2xl">
                         <svg :width="size" :height="size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 20h18"></path>
                             <path d="M16 4l5 5-5 5"></path>
@@ -542,8 +535,9 @@
             setup() {
                 const authState = ref('landing');
                 const user = ref(null);
-                const userProfile = ref({ name: 'User' });
+                const userProfile = ref({ name: 'Kaizen Warrior' });
                 const isLoading = ref(true);
+                const isLoadingAuth = ref(false);
                 const currentPage = ref('dashboard');
                 const isMobileMenuOpen = ref(false);
                 const notification = ref(null);
@@ -567,8 +561,8 @@
                 const paymentDate = ref(new Date().toISOString().split('T')[0]);
 
                 const navItems = [
-                    { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
-                    { id: 'info', label: 'Kaizen Academy', icon: 'info' },
+                    { id: 'dashboard', label: 'Overview', icon: 'layout-dashboard' },
+                    { id: 'info', label: 'Academy', icon: 'info' },
                 ];
 
                 const categories = [
@@ -579,69 +573,74 @@
                 ];
 
                 const features = [
-                    { title: 'Momentum Engine', desc: 'Visualize exactly how extra payments crush your debt balance.', icon: 'zap', color: 'bg-indigo-500' },
-                    { title: 'Milestones', desc: 'Celebrate every 25%, 50%, and the 70% home stretch.', icon: 'trophy', color: 'bg-emerald-500' },
-                    { title: 'Strategic Payoffs', desc: 'Built-in Snowball and Avalanche strategy tracking.', icon: 'shield-check', color: 'bg-blue-500' }
+                    { title: 'Velocity Tracking', desc: 'Visualize exactly how extra injections crush your debt balance.', icon: 'zap', color: 'bg-indigo-600' },
+                    { title: 'The 70% Marker', desc: 'Celebrate the critical threshold where freedom becomes a certainty.', icon: 'trophy', color: 'bg-emerald-600' },
+                    { title: 'Strategic Logic', desc: 'Seamlessly switch between psychological Snowball or math-heavy Avalanche.', icon: 'shield-check', color: 'bg-blue-600' }
                 ];
 
                 const markers = [
-                    { p: 0, l: 'Start' }, { p: 25, l: 'Quarter' }, { p: 50, l: 'Half' }, { p: 70, l: 'Home Stretch', target: true }, { p: 100, l: 'Freedom' }
+                    { p: 0, l: 'Launch' }, { p: 25, l: 'Cruising' }, { p: 50, l: 'Midpoint' }, { p: 70, l: 'Home Stretch', target: true }, { p: 100, l: 'FREEDOM' }
                 ];
 
-                onMounted(() => {
-                    onAuthStateChanged(auth, async (u) => {
-                        if (u) {
-                            user.value = { uid: u.uid };
-                            const profileRef = doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data');
-                            onSnapshot(profileRef, (snap) => {
-                                if (snap.exists()) {
-                                    userProfile.value = snap.data();
-                                }
-                            });
-                            authState.value = 'dashboard';
-                            syncData();
-                        } else {
-                            if (authState.value === 'dashboard') {
+                const initAuth = async () => {
+                    try {
+                        const initUnsubscribe = onAuthStateChanged(auth, async (u) => {
+                            if (u) {
+                                user.value = { uid: u.uid };
+                                const profileRef = doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data');
+                                onSnapshot(profileRef, (snap) => {
+                                    if (snap.exists()) userProfile.value = snap.data();
+                                });
+                                authState.value = 'dashboard';
+                                syncData();
+                            } else if (authState.value === 'dashboard') {
                                 authState.value = 'landing';
                             }
-                        }
+                            isLoading.value = false;
+                            initIcons();
+                        });
+                    } catch (err) {
                         isLoading.value = false;
-                        setTimeout(() => lucide.createIcons(), 100);
-                    });
+                        console.error(err);
+                    }
+                };
+
+                onMounted(() => {
+                    initAuth();
+                    document.getElementById('deployment-error').style.display = 'none';
                 });
 
                 const handleLogin = async () => {
                     try {
-                        isLoading.value = true;
+                        isLoadingAuth.value = true;
                         await signInAnonymously(auth);
-                        showToast("Welcome back!");
+                        showToast("Welcome back");
                     } catch (e) {
-                        showToast("Login failed");
+                        showToast("Authentication Failed");
                     } finally {
-                        isLoading.value = false;
+                        isLoadingAuth.value = false;
                     }
                 };
 
                 const handleRegister = async () => {
                     if (regPassword.value !== regConfirmPassword.value) {
-                        showToast("Passwords do not match");
+                        showToast("Mismatch detected");
                         return;
                     }
                     try {
-                        isLoading.value = true;
+                        isLoadingAuth.value = true;
                         const cred = await signInAnonymously(auth);
                         const profileRef = doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data');
                         await setDoc(profileRef, {
                             name: regName.value,
                             email: regEmail.value,
-                            username: regEmail.value.split('@')[0],
                             createdAt: new Date().toISOString()
                         });
-                        showToast("Account created!");
+                        showToast("Profile Initialized");
                     } catch (e) {
-                        showToast("Registration failed");
+                        showToast("System error");
                     } finally {
-                        isLoading.value = false;
+                        isLoadingAuth.value = false;
                     }
                 };
 
@@ -649,7 +648,7 @@
                     signOut(auth);
                     authState.value = 'landing';
                     debts.value = [];
-                    userProfile.value = { name: 'User' };
+                    userProfile.value = { name: 'Kaizen Warrior' };
                 };
 
                 const syncData = () => {
@@ -657,21 +656,22 @@
                     const debtsRef = collection(db, 'artifacts', appId, 'users', user.value.uid, 'debts');
                     onSnapshot(debtsRef, (snapshot) => {
                         debts.value = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                        setTimeout(() => lucide.createIcons(), 0);
-                    }, (err) => showToast("Cloud error"));
+                        initIcons();
+                    }, (err) => showToast("Cloud Sync Error"));
                 };
 
                 const showToast = (msg) => {
                     notification.value = msg;
-                    setTimeout(() => notification.value = null, 3000);
+                    setTimeout(() => notification.value = null, 4000);
                 };
 
                 const navigateTo = (page) => {
                     currentPage.value = page;
                     isMobileMenuOpen.value = false;
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    setTimeout(() => lucide.createIcons(), 100);
+                    initIcons();
                 };
+
+                const initIcons = () => setTimeout(() => lucide.createIcons(), 100);
 
                 const totalBalance = computed(() => debts.value.reduce((s, d) => s + (d.balance || 0), 0));
                 const totalPaid = computed(() => debts.value.reduce((s, d) => s + (d.payments?.reduce((ps, p) => ps + p.amount, 0) || 0), 0));
@@ -682,9 +682,9 @@
                 });
 
                 const mainStats = computed(() => [
-                    { title: 'Total debt', value: totalBalance.value, icon: 'trending-down', color: 'bg-rose-500/80', sub: 'Remaining balance' },
-                    { title: 'Minimum payments', value: totalMinPayment.value, icon: 'calendar', color: 'bg-amber-500/80', sub: 'Mandatory burn' },
-                    { title: 'total payments', value: totalMinPayment.value + extraPayment.value, icon: 'zap', color: 'bg-indigo-500/80', sub: 'Monthly velocity' }
+                    { title: 'Total debt', value: totalBalance.value, icon: 'trending-down', color: 'bg-rose-500/80', sub: 'Outstanding' },
+                    { title: 'Minimum payments', value: totalMinPayment.value, icon: 'calendar', color: 'bg-amber-500/80', sub: 'Required Monthly' },
+                    { title: 'total payments', value: totalMinPayment.value + extraPayment.value, icon: 'zap', color: 'bg-indigo-500/80', sub: 'Aggressive Velocity' }
                 ]);
 
                 const categoryProgress = computed(() => {
@@ -695,7 +695,7 @@
                         const paid = items.reduce((s, d) => s + (d.payments?.reduce((ps, p) => ps + p.amount, 0) || 0), 0);
                         const original = bal + paid;
                         stats[c.key] = {
-                            id: c.id, icon: c.icon, balance: bal, paid: paid,
+                            id: c.id, icon: c.icon, balance: bal, paid,
                             pct: original > 0 ? (paid / original) * 100 : 0,
                             colorClass: c.id === 'credit-cards' ? 'bg-blue-600' : c.id === 'education' ? 'bg-emerald-600' : c.id === 'personal' ? 'bg-purple-600' : 'bg-rose-500'
                         };
@@ -711,36 +711,40 @@
                 const activeCategoryTotal = computed(() => categoryProgress.value[activeCategoryKey.value]?.balance || 0);
 
                 const filteredDebts = computed(() => debts.value.filter(d => d.category === activeCategoryKey.value));
-                const sortedPayments = computed(() => {
-                    if (!activePaymentDebt.value?.payments) return [];
-                    return [...activePaymentDebt.value.payments].sort((a, b) => new Date(b.date) - new Date(a.date));
-                });
+                const sortedPayments = computed(() => activePaymentDebt.value?.payments ? [...activePaymentDebt.value.payments].sort((a,b) => new Date(b.date) - new Date(a.date)) : []);
 
                 const handleAddDebt = async (category) => {
+                    if (!user.value) return;
                     try {
                         const debtsRef = collection(db, 'artifacts', appId, 'users', user.value.uid, 'debts');
                         await addDoc(debtsRef, {
                             name: `New ${category}`, balance: 0, interest: 0, minPayment: 0,
                             category, payments: [], createdAt: new Date().toISOString()
                         });
-                        showToast("Added entry");
-                    } catch (e) { showToast("Sync error"); }
+                        showToast("Vector Created");
+                    } catch (e) { showToast("Sync Denied"); }
                 };
 
                 const handleUpdateDebt = async (id, field, val) => {
-                    const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', id);
-                    await updateDoc(debtDoc, { [field]: field === 'name' ? val : (parseFloat(val) || 0) });
+                    if (!user.value) return;
+                    try {
+                        const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', id);
+                        await updateDoc(debtDoc, { [field]: field === 'name' ? val : (parseFloat(val) || 0) });
+                    } catch (e) {}
                 };
 
                 const handleDeleteDebt = async (id) => {
-                    const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', id);
-                    await deleteDoc(debtDoc);
-                    showToast("Removed entry");
+                    if (!user.value) return;
+                    try {
+                        const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', id);
+                        await deleteDoc(debtDoc);
+                        showToast("Vector Erased");
+                    } catch (e) {}
                 };
 
                 const handleAddPayment = async () => {
                     const debt = activePaymentDebt.value;
-                    if (!debt || !paymentAmount.value) return;
+                    if (!debt || !paymentAmount.value || !user.value) return;
                     const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', debt.id);
                     try {
                         const newPayment = { amount: paymentAmount.value, date: paymentDate.value, id: crypto.randomUUID() };
@@ -748,21 +752,18 @@
                             balance: Math.max(0, debt.balance - paymentAmount.value),
                             payments: [...(debt.payments || []), newPayment]
                         });
-                        activePaymentDebt.value = null;
-                        paymentAmount.value = null;
-                        showToast("Payment synced");
-                    } catch (e) { showToast("Error"); }
+                        activePaymentDebt.value = null; paymentAmount.value = null;
+                        showToast("Kaizen Executed");
+                    } catch (e) { showToast("Logic Overflow"); }
                 };
 
-                const userName = computed(() => userProfile.value?.name || 'User');
+                const userName = computed(() => userProfile.value?.name || 'Warrior');
                 const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
 
-                watch([authState, currentPage, activePaymentDebt], () => {
-                    setTimeout(() => lucide.createIcons(), 100);
-                });
+                watch([authState, currentPage, activePaymentDebt], initIcons);
 
                 return {
-                    authState, user, isLoading, currentPage, isMobileMenuOpen, notification, debts, extraPayment, strategy,
+                    authState, user, isLoading, isLoadingAuth, currentPage, isMobileMenuOpen, notification, debts, extraPayment, strategy,
                     loginUsername, loginPassword, showPassword,
                     regName, regEmail, regPassword, regConfirmPassword, showRegPassword, showRegConfirmPassword,
                     navItems, categories, features, markers, navigateTo, totalBalance, totalPaid, totalMinPayment,
