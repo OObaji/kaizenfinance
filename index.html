@@ -163,13 +163,13 @@
         <!-- Dashboard Layout -->
         <div v-if="authState === 'dashboard'" class="min-h-screen flex flex-col lg:flex-row">
             
-            <!-- Mobile Navigation -->
+            <!-- Mobile Header -->
             <div class="lg:hidden bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
                 <div class="flex items-center gap-3">
                     <kaizen-logo size="24"></kaizen-logo>
                     <span class="text-lg font-black tracking-tighter text-white">Kaizen Finance</span>
                 </div>
-                <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-slate-400 bg-slate-800 rounded-lg">
+                <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-slate-400 bg-slate-800 rounded-lg shadow-lg">
                     <i :data-lucide="isMobileMenuOpen ? 'x' : 'menu'"></i>
                 </button>
             </div>
@@ -184,8 +184,8 @@
                     </div>
                 </div>
 
-                <!-- Menu Items -->
-                <div class="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+                <!-- Scrollable Navigation -->
+                <div class="flex-1 overflow-y-auto px-8 py-4 custom-scrollbar">
                     <nav class="flex flex-col gap-2">
                         <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 text-left">Main</p>
                         <button v-for="item in navItems" :key="item.id" @click="navigateTo(item.id)" :class="currentPage === item.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
@@ -205,12 +205,12 @@
                 <!-- Sidebar Footer -->
                 <div class="p-6 space-y-4 bg-slate-900/30 border-t border-slate-800/50">
                     <div class="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800">
-                        <div class="flex justify-between mb-3 text-white">
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Repayment Progress</span>
+                        <div class="flex justify-between mb-3 text-white text-left">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Overall Repayment</span>
                             <span class="text-indigo-400 font-black text-xs">{{ progressPercent }}%</span>
                         </div>
                         <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5">
-                            <div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-1000" :style="{ width: progressPercent + '%' }"></div>
+                            <div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_#6366f1]" :style="{ width: progressPercent + '%' }"></div>
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-4 glass rounded-[1.5rem] shadow-xl">
@@ -221,7 +221,7 @@
                                 <div class="flex items-center gap-1 text-[9px] text-emerald-500 font-black uppercase"><i data-lucide="shield-check" class="w-3 h-3"></i> Destroyer</div>
                             </div>
                         </div>
-                        <button @click="handleLogout" class="p-2 text-slate-500 hover:text-rose-400 transition-all"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                        <button @click="handleLogout" class="p-2 text-slate-500 hover:text-rose-400 transition-all ml-1 shrink-0"><i data-lucide="log-out" class="w-5 h-5"></i></button>
                     </div>
                 </div>
             </aside>
@@ -248,7 +248,7 @@
                             <div class="absolute inset-x-4 top-10 h-full pointer-events-none text-center flex justify-between">
                                 <div v-for="marker in markers" :key="marker.p" :style="{ left: marker.p + '%' }" class="absolute top-0 flex flex-col items-center -translate-x-1/2">
                                     <div :class="[progressPercent >= marker.p ? (marker.target ? 'bg-emerald-500' : 'bg-indigo-500') : 'bg-slate-700']" class="w-1 h-6 transition-colors duration-500"></div>
-                                    <div class="mt-2 text-white">
+                                    <div class="mt-2 text-white text-center">
                                         <p :class="[progressPercent >= marker.p ? (marker.target ? 'text-emerald-400' : 'text-indigo-400') : 'text-slate-600']" class="text-[10px] font-black tracking-tighter">{{ marker.p }}%</p>
                                         <p :class="[progressPercent >= marker.p ? 'text-slate-300' : 'text-slate-600']" class="text-[8px] font-bold uppercase tracking-widest hidden md:block whitespace-nowrap">{{ marker.l }}</p>
                                     </div>
@@ -257,36 +257,36 @@
                             </div>
                         </div>
                         <div class="mt-8 flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-900/50 w-fit px-4 py-2 rounded-full border border-slate-700 shadow-inner">
-                            <i data-lucide="check-circle-2" class="text-emerald-500 w-4 h-4"></i> Total Kaizen: <span class="text-slate-200 ml-1 font-black">£{{ totalPaid.toLocaleString() }} paid</span>
+                            <i data-lucide="check-circle-2" class="text-emerald-500 w-4 h-4"></i> Total Repaid: <span class="text-slate-200 ml-1 font-black uppercase">£{{ totalPaid.toLocaleString() }} cleared</span>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div v-for="stat in mainStats" :key="stat.title" class="glass p-6 rounded-[2rem] text-left hover:border-indigo-500/30 transition-all group">
+                        <div v-for="stat in mainStats" :key="stat.title" class="glass p-6 rounded-[2rem] text-left hover:border-indigo-500/30 transition-all group shadow-xl">
                             <div :class="stat.color" class="p-3 rounded-2xl text-white w-fit mb-4 shadow-inner group-hover:scale-110 transition-transform"><i :data-lucide="stat.icon"></i></div>
                             <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest">{{ stat.title }}</h3>
                             <div class="flex items-baseline gap-1 mt-1 text-white"><span class="text-3xl font-black">£{{ stat.value.toLocaleString() }}</span></div>
-                            <p class="text-[10px] text-slate-500 mt-2 font-medium flex items-center gap-1"><i data-lucide="shield-check" class="text-emerald-500 w-3 h-3"></i> {{ stat.sub }}</p>
+                            <p class="text-[10px] text-slate-500 mt-2 font-medium flex items-center gap-1"><i data-lucide="activity" class="text-emerald-500 w-3 h-3"></i> {{ stat.sub }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
-                        <div class="glass p-8 rounded-[2.5rem] shadow-xl">
-                            <h2 class="text-xl font-black text-white mb-8 flex items-center gap-2"><i data-lucide="filter" class="text-indigo-400"></i> Category Progress</h2>
+                        <div class="glass p-8 rounded-[2.5rem] shadow-2xl">
+                            <h2 class="text-xl font-black text-white mb-8 flex items-center gap-2"><i data-lucide="layers" class="text-indigo-400"></i> Section Progress</h2>
                             <div class="space-y-4">
                                 <div v-for="(stat, key) in categoryProgress" :key="key" @click="navigateTo(stat.id)" class="group flex items-center justify-between p-5 rounded-2xl hover:bg-slate-700/50 cursor-pointer border border-transparent hover:border-slate-700 transition-all active:scale-[0.98]">
                                     <div class="flex items-center gap-4 text-left">
                                         <div :class="stat.colorClass" class="p-3 rounded-xl text-white shadow-lg"><i :data-lucide="stat.icon"></i></div>
                                         <div class="text-left">
                                             <p class="font-black text-slate-200 text-sm text-left">{{ key }}s</p>
-                                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight text-left">£{{ stat.paid.toLocaleString() }} cleared</p>
+                                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight text-left">£{{ stat.paid.toLocaleString() }} paid</p>
                                         </div>
                                     </div>
                                     <div class="text-right flex items-center gap-6">
                                         <div class="text-right">
-                                            <p class="font-black text-white text-right">£{{ stat.balance.toLocaleString() }}</p>
-                                            <div class="flex items-center gap-2 mt-1.5 justify-end">
-                                                <div class="w-20 h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                                            <p class="font-black text-white text-right leading-none">£{{ stat.balance.toLocaleString() }}</p>
+                                            <div class="flex items-center gap-2 mt-2 justify-end">
+                                                <div class="w-20 h-1 bg-slate-900 rounded-full overflow-hidden">
                                                     <div :class="stat.colorClass" class="h-full transition-all duration-1000" :style="{ width: stat.pct + '%' }"></div>
                                                 </div>
                                                 <span class="text-[10px] font-black text-indigo-400">{{ Math.round(stat.pct) }}%</span>
@@ -300,65 +300,67 @@
 
                         <div class="bg-indigo-950/50 text-white p-10 rounded-[2.5rem] border border-indigo-500/20 shadow-2xl relative overflow-hidden flex flex-col justify-between">
                             <div class="relative z-10 text-left">
-                                <h3 class="text-3xl font-black mb-2 tracking-tight italic text-left">Momentum Engine</h3>
-                                <p class="text-indigo-300 text-sm mb-10 leading-relaxed text-left">Inject surplus cash to accelerate your freedom date.</p>
+                                <h3 class="text-3xl font-black mb-2 tracking-tight italic text-left">Repayment Engine</h3>
+                                <p class="text-indigo-300 text-sm mb-10 leading-relaxed text-left">Adjust your monthly surplus to accelerate your freedom date.</p>
                                 <div class="space-y-10">
                                     <div class="text-left">
                                         <div class="flex justify-between items-end mb-4 text-left">
-                                            <span class="text-indigo-400 font-bold text-xs uppercase tracking-widest text-left">Monthly Power-Up</span>
-                                            <div class="text-right text-white"><span class="text-4xl font-black text-white">£{{ extraPayment }}</span></div>
+                                            <span class="text-indigo-400 font-bold text-xs uppercase tracking-widest text-left font-black">Injection Surge</span>
+                                            <div class="text-right text-white"><span class="text-4xl font-black text-white leading-none">£{{ extraPayment }}</span></div>
                                         </div>
                                         <input type="range" min="0" max="5000" step="50" v-model.number="extraPayment" class="w-full h-3 bg-indigo-900 rounded-lg appearance-none cursor-pointer accent-white border border-indigo-800">
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <button @click="strategy = 'snowball'" :class="strategy === 'snowball' ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Snowball</button>
-                                        <button @click="strategy = 'avalanche'" :class="strategy === 'avalanche' ? 'bg-indigo-50 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Avalanche</button>
+                                        <button @click="strategy = 'avalanche'" :class="strategy === 'avalanche' ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Avalanche</button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="absolute -bottom-20 -right-20 text-indigo-500/5 rotate-12 pointer-events-none"><i data-lucide="zap" class="w-[400px] h-[400px]"></i></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Info Academy -->
-                <div v-if="currentPage === 'info'" class="space-y-12 animate-in text-left">
-                    <h2 class="text-4xl font-black text-white tracking-tighter flex items-center gap-4"><i data-lucide="lightbulb" class="text-amber-400 w-10 h-10"></i> Kaizen Academy</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 text-left">
-                        <div class="glass p-10 rounded-[3rem] shadow-2xl text-left border-l-4 border-indigo-500">
-                            <div class="bg-indigo-500/10 p-4 w-fit rounded-2xl mb-6 text-indigo-400"><i data-lucide="zap" class="w-8 h-8"></i></div>
-                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight text-left">The Kaizen Philosophy</h3>
-                            <p class="text-slate-400 leading-relaxed text-left text-lg">Freedom is won through <span class="text-white font-bold italic underline decoration-indigo-500 decoration-2 underline-offset-4">incremental change</span>. Compounding debt requires compounding aggression. A £10 extra payment today changes the trajectory of your entire year.</p>
-                        </div>
-                        <div class="glass p-10 rounded-[3rem] shadow-2xl text-left border-l-4 border-emerald-500">
-                            <div class="bg-emerald-500/10 p-4 w-fit rounded-2xl mb-6 text-emerald-400"><i data-lucide="shield-check" class="w-8 h-8"></i></div>
-                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight text-left">Mindset Shift</h3>
-                            <p class="text-slate-400 leading-relaxed text-left text-lg">Debt is simply math in reverse. You aren't "behind"; you are solves a puzzle where the numbers currently favor the bank. By logging every payment, you reclaim the math.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Category Page -->
-                <div v-if="isCategoryPage" class="animate-in space-y-8">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 text-left">
-                        <div class="flex items-center gap-6">
-                            <div :class="activeCategoryColor" class="p-4 rounded-[1.5rem] text-white shadow-2xl rotate-3"><i :data-lucide="activeCategoryIcon" class="w-10 h-10"></i></div>
-                            <div class="text-left">
-                                <h2 class="text-4xl font-black text-white tracking-tighter">{{ activeCategoryTitle }}</h2>
-                                <p class="text-slate-500 text-sm font-medium italic">Total Outstanding: <span class="text-white font-bold not-italic">£{{ activeCategoryTotal.toLocaleString() }}</span></p>
+                            <div class="absolute -bottom-20 -right-20 text-indigo-500/5 rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                                <i data-lucide="zap" class="w-[400px] h-[400px]"></i>
                             </div>
                         </div>
-                        <button @click="handleAddDebt(activeCategoryKey)" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl active:scale-95 border border-white/5">
-                            <i data-lucide="plus-circle"></i> Add New Entry
+                    </div>
+                </div>
+
+                <!-- Academy View -->
+                <div v-if="currentPage === 'info'" class="space-y-12 animate-in text-left max-w-6xl mx-auto">
+                    <h2 class="text-4xl font-black text-white tracking-tighter flex items-center gap-4 mb-10"><i data-lucide="lightbulb" class="text-amber-400 w-10 h-10"></i> Kaizen Academy</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 text-left">
+                        <div class="glass p-10 rounded-[3rem] shadow-2xl text-left border-l-4 border-indigo-500">
+                            <div class="bg-indigo-500/10 p-4 w-fit rounded-2xl mb-6 text-indigo-400 group-hover:scale-110 transition-transform"><i data-lucide="zap" class="w-8 h-8"></i></div>
+                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight text-left italic font-bold uppercase">The Kaizen Philosophy</h3>
+                            <p class="text-slate-400 leading-relaxed text-left text-lg">Financial freedom is won through <span class="text-white font-bold italic underline decoration-indigo-500 decoration-2 underline-offset-4">incremental change</span>. Compounding debt requires compounding aggression.</p>
+                        </div>
+                        <div class="glass p-10 rounded-[3rem] shadow-2xl text-left border-l-4 border-emerald-500">
+                            <div class="bg-emerald-500/10 p-4 w-fit rounded-2xl mb-6 text-emerald-400 group-hover:scale-110 transition-transform"><i data-lucide="shield-check" class="w-8 h-8"></i></div>
+                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight text-left italic font-bold uppercase">Debt is a Math Problem</h3>
+                            <p class="text-slate-400 leading-relaxed text-lg">You aren't "bad with money"; you are solving a puzzle where the numbers currently favor the institution. By logging every payment, you reclaim the math.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Items -->
+                <div v-if="isCategoryPage" class="animate-in space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 text-left">
+                        <div class="flex items-center gap-6 text-left">
+                            <div :class="activeCategoryColor" class="p-5 rounded-[1.8rem] text-white shadow-2xl rotate-2 transition-all"><i :data-lucide="activeCategoryIcon" class="w-10 h-10"></i></div>
+                            <div class="text-left">
+                                <h2 class="text-4xl font-black text-white tracking-tighter text-left">{{ activeCategoryTitle }}</h2>
+                                <p class="text-slate-500 text-sm font-medium text-left italic">Outstanding: <span class="text-white font-black not-italic ml-1">£{{ activeCategoryTotal.toLocaleString() }}</span></p>
+                            </div>
+                        </div>
+                        <button @click="handleAddDebt(activeCategoryKey)" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl active:scale-95 group">
+                            <i data-lucide="plus-circle" class="group-hover:rotate-90 transition-transform"></i> New Data Point
                         </button>
                     </div>
 
-                    <div class="space-y-4">
-                        <div v-if="filteredDebts.length === 0" class="glass border-2 border-dashed border-slate-700/50 py-20 rounded-[2.5rem] text-center flex flex-col items-center gap-4">
-                            <i data-lucide="target" class="w-12 h-12 text-slate-700"></i>
-                            <p class="text-slate-600 font-bold uppercase tracking-widest text-xs">Category Clear.</p>
+                    <div class="space-y-6">
+                        <div v-if="filteredDebts.length === 0" class="glass border-2 border-dashed border-slate-700/50 py-32 rounded-[3.5rem] text-center flex flex-col items-center gap-6">
+                            <i data-lucide="sparkles" class="w-16 h-16 text-indigo-500 opacity-40"></i>
+                            <p class="text-slate-600 font-black uppercase tracking-widest text-sm italic">Absolute zero achieved. This variable is cleared.</p>
                         </div>
-                        <div v-for="debt in filteredDebts" :key="debt.id" class="bg-slate-800/80 p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 transition-all border-l-[6px]" :style="{ borderLeftColor: 'currentColor' }">
+                        <div v-for="debt in filteredDebts" :key="debt.id" class="bg-slate-800/80 p-8 md:p-10 rounded-[2.5rem] border border-slate-700/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 transition-all border-l-[6px] hover:border-indigo-500/40" :style="{ borderLeftColor: 'currentColor' }">
                             <div class="flex-1 w-full text-left">
                                 <div class="flex items-center gap-3 mb-6">
                                     <input v-model="debt.name" @change="handleUpdateDebt(debt.id, 'name', debt.name)" class="text-2xl font-black bg-slate-900/50 focus:bg-slate-900 border-b-2 border-transparent focus:border-indigo-500 transition-all p-3 w-full rounded-t-xl outline-none text-white shadow-inner" placeholder="Entry Label...">
@@ -366,26 +368,26 @@
                                         <i data-lucide="history" class="w-5 h-5"></i> <span>History</span>
                                     </button>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-5">
-                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5">
-                                        <i data-lucide="percent" class="text-indigo-400 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">APR:</span>
+                                <div class="flex flex-wrap items-center gap-6 text-left">
+                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5 text-left shadow-inner">
+                                        <i data-lucide="percent" class="text-indigo-400 w-4 h-4"></i> <span class="uppercase tracking-[0.2em] opacity-60">APR:</span>
                                         <input type="number" v-model.number="debt.interest" @change="handleUpdateDebt(debt.id, 'interest', debt.interest)" class="w-12 bg-transparent outline-none text-slate-100 font-black text-sm">%
                                     </div>
-                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5">
-                                        <i data-lucide="clock" class="text-amber-500 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">Min:</span>
+                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5 text-left shadow-inner">
+                                        <i data-lucide="clock" class="text-amber-500 w-4 h-4"></i> <span class="uppercase tracking-[0.2em] opacity-60">Minimum:</span>
                                         <span class="text-white text-sm">£</span><input type="number" v-model.number="debt.min_payment" @change="handleUpdateDebt(debt.id, 'min_payment', debt.min_payment)" class="w-20 bg-transparent outline-none text-slate-100 font-black text-sm">
                                     </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-10 w-full md:w-auto border-t md:border-t-0 border-slate-700 pt-8 md:pt-0">
                                 <div class="text-right flex-1 md:flex-none">
-                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2">Current Balance</p>
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] mb-2 text-right">Outstanding Value</p>
                                     <div class="flex items-center justify-end gap-2 bg-slate-900/80 px-6 py-4 rounded-3xl border border-white/5 shadow-inner focus-within:border-indigo-500/50 transition-all">
                                         <span class="text-2xl font-black text-slate-600 leading-none">£</span>
                                         <input type="number" v-model.number="debt.balance" @change="handleUpdateDebt(debt.id, 'balance', debt.balance)" class="text-4xl font-black text-white bg-transparent border-none outline-none w-36 text-right leading-none">
                                     </div>
                                 </div>
-                                <button @click="handleDeleteDebt(debt.id)" class="p-5 glass text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all shadow-xl"><i data-lucide="trash-2" class="w-6 h-6"></i></button>
+                                <button @click="handleDeleteDebt(debt.id)" class="p-5 glass text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all shadow-xl"><i data-lucide="trash-2" class="w-7 h-7"></i></button>
                             </div>
                         </div>
                     </div>
@@ -393,37 +395,37 @@
             </main>
         </div>
 
-        <!-- History Modal -->
+        <!-- Injection Modal -->
         <div v-if="activePaymentDebt" class="fixed inset-0 z-[100] flex items-center justify-end bg-slate-950/90 backdrop-blur-xl animate-in">
             <div class="w-full max-w-md h-full bg-slate-900 border-l border-white/5 shadow-2xl p-10 flex flex-col transition-transform duration-500">
                 <div class="flex justify-between items-center mb-12 text-left shrink-0">
                     <div class="text-left text-white">
-                        <h3 class="text-3xl font-black tracking-tighter text-left">Injection Log</h3>
+                        <h3 class="text-3xl font-black tracking-tighter">Injection Log</h3>
                         <p class="text-slate-500 text-sm font-bold mt-2 uppercase tracking-widest border-b border-indigo-500/30 pb-2 text-left">{{ activePaymentDebt.name }}</p>
                     </div>
                     <button @click="activePaymentDebt = null" class="p-3 bg-slate-800 rounded-2xl text-slate-400 hover:text-white transition-all shadow-xl"><i data-lucide="x"></i></button>
                 </div>
                 <form @submit.prevent="handleAddPayment" class="p-8 rounded-[2.5rem] bg-indigo-600/5 border border-indigo-500/10 mb-12 text-left shadow-2xl">
                     <div class="space-y-6 text-left">
-                        <div class="flex items-center gap-4 bg-slate-950 p-5 rounded-3xl border border-white/5 focus-within:ring-2 focus-within:ring-indigo-500 shadow-inner">
+                        <div class="flex items-center gap-4 bg-slate-950 p-6 rounded-3xl border border-white/5 focus-within:ring-2 focus-within:ring-indigo-500 shadow-inner">
                             <span class="text-3xl font-black text-slate-600">£</span>
-                            <input v-model.number="paymentAmount" type="number" step="0.01" required placeholder="0.00" class="w-full text-4xl font-black focus:outline-none bg-transparent text-white">
+                            <input v-model.number="paymentAmount" type="number" step="0.01" required placeholder="0.00" class="w-full text-5xl font-black focus:outline-none bg-transparent text-white leading-none">
                         </div>
                         <div class="flex items-center gap-4 bg-slate-950 p-5 rounded-3xl border border-white/5">
                             <i data-lucide="calendar" class="text-slate-500 w-6 h-6"></i>
                             <input v-model="paymentDate" type="date" required class="w-full font-bold text-slate-300 focus:outline-none bg-transparent [color-scheme:dark]">
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-3xl font-black text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)] active:scale-95 transition-all uppercase tracking-widest">Confirm Injection</button>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-3xl font-black text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)] active:scale-95 transition-all uppercase tracking-widest">Execute Injection</button>
                     </div>
                 </form>
                 <div class="flex-1 overflow-y-auto custom-scrollbar pr-4 text-left">
                     <div class="space-y-4 pb-10 text-left">
-                        <div v-for="pay in sortedPayments" :key="pay.id" class="flex items-center justify-between p-5 glass rounded-[2rem] border-white/5 text-left group">
+                        <div v-for="pay in sortedPayments" :key="pay.id" class="flex items-center justify-between p-5 glass rounded-[2rem] border-white/5 text-left group hover:translate-x-1 transition-all">
                             <div class="flex items-center gap-4 text-left text-white">
                                 <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform"><i data-lucide="check" class="w-5 h-5"></i></div>
                                 <div class="text-left">
-                                    <p class="font-black text-white text-xl leading-none mb-1">£{{ pay.amount.toLocaleString() }}</p>
-                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ pay.date }}</p>
+                                    <p class="font-black text-white text-xl leading-none mb-2 font-black">£{{ pay.amount.toLocaleString() }}</p>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest opacity-60">{{ pay.date }}</p>
                                 </div>
                             </div>
                         </div>
@@ -432,38 +434,40 @@
             </div>
         </div>
 
-        <!-- Notification Toast -->
-        <div v-if="notification" class="fixed bottom-10 right-10 z-[110] bg-indigo-600 text-white px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in border border-white/20">
+        <!-- Notifications -->
+        <div v-if="notification" class="fixed bottom-10 right-10 z-[110] bg-indigo-600 text-white px-8 py-5 rounded-full shadow-[0_0_50px_rgba(99,102,241,0.5)] flex items-center gap-4 animate-in border border-white/20">
             <i data-lucide="zap" class="text-indigo-200"></i>
-            <span class="font-black text-sm tracking-tight italic uppercase">{{ notification }}</span>
+            <span class="font-black text-base tracking-tight uppercase">{{ notification }}</span>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Correct Supabase Initialization -->
     <script type="module">
-        // Global error capture
+        // Capture initialization errors
         window.onerror = function(msg, url, line) {
             const errEl = document.getElementById('deployment-error');
             if(errEl) {
                 errEl.style.display = 'flex';
-                document.getElementById('error-message').innerText = `Critical Error: ${msg} (Line ${line})`;
+                document.getElementById('error-message').innerText = `Critical Initialization Failure: ${msg} (Line ${line})`;
             }
         };
 
+        // Constants
         const SUPABASE_URL = 'https://clstohryamyzfwfymrrr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsc3RvaHJ5YW15emZ3dGZ5bXJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMTI0NjgsImV4cCI6MjA4NTY4ODQ2OH0.NIef4prO_6ei9GCl2fUGgL-wEZkCdToiqfa215oic5s';
         
-        // Initialize Supabase correctly using window object to avoid ReferenceError shadowing
+        // Use window.supabase from the global script tag to avoid shadowing ReferenceErrors
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const { createApp, ref, computed, onMounted, watch } = Vue;
 
+        // Logo component definition
         const KaizenLogo = {
             props: ['size'],
             template: `
                 <div class="relative flex items-center justify-center" :style="{ width: parseInt(size) + 16 + 'px', height: parseInt(size) + 16 + 'px' }">
                     <div class="absolute inset-0 bg-indigo-600 rounded-[1.25rem] rotate-6 opacity-20 animate-pulse"></div>
-                    <div class="relative w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[1.25rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-900/40">
+                    <div class="relative w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[1.25rem] flex items-center justify-center text-white shadow-2xl">
                         <svg :width="size" :height="size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 20h18"></path>
                             <path d="M16 4l5 5-5 5"></path>
@@ -497,7 +501,7 @@
                 const paymentDate = ref(new Date().toISOString().split('T')[0]);
 
                 const navItems = [
-                    { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
+                    { id: 'dashboard', label: 'Overview', icon: 'layout-dashboard' },
                     { id: 'info', label: 'Academy', icon: 'info' },
                 ];
 
@@ -509,34 +513,42 @@
                 ];
 
                 const features = [
-                    { title: 'Momentum Engine', desc: 'Visualize exactly how extra injections crush your debt balance.', icon: 'zap', color: 'bg-indigo-600' },
-                    { title: 'The 70% Marker', desc: 'Celebrate the critical threshold where freedom becomes a certainty.', icon: 'trophy', color: 'bg-emerald-600' },
-                    { title: 'Cloud Logic', desc: 'Real-time synchronization across devices powered by Supabase.', icon: 'shield-check', color: 'bg-blue-600' }
+                    { title: 'Momentum Logic', desc: 'Visualize exactly how extra injections crush your debt balance.', icon: 'zap', color: 'bg-indigo-600' },
+                    { title: 'The 70% Milestone', desc: 'Celebrate the threshold where habits become unbreakable.', icon: 'trophy', color: 'bg-emerald-600' },
+                    { title: 'Strategic Engine', desc: 'Switch between psychological Snowball or mathematical Avalanche.', icon: 'shield-check', color: 'bg-blue-600' }
                 ];
 
-                const markers = [{ p: 0, l: 'Launch' }, { p: 25, l: 'Quarter' }, { p: 50, l: 'Half' }, { p: 70, l: 'Home Stretch', target: true }, { p: 100, l: 'FREEDOM' }];
+                const markers = [{ p: 0, l: 'Launch' }, { p: 25, l: 'Cruising' }, { p: 50, l: 'Midpoint' }, { p: 70, l: 'Home Stretch', target: true }, { p: 100, l: 'FREEDOM' }];
 
                 onMounted(async () => {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (session) {
-                        user.value = session.user;
-                        await loadProfile();
-                        authState.value = 'dashboard';
-                        fetchDebts();
+                    // Check existing session
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        if (session) {
+                            user.value = session.user;
+                            await loadProfile();
+                            authState.value = 'dashboard';
+                            fetchDebts();
+                        }
+                    } catch (err) {
+                        console.error("Session check error", err);
                     }
+                    
                     isLoading.value = false;
                     initIcons();
                     
-                    supabaseClient.auth.onAuthStateChange((_event, session) => {
+                    // Listen for auth changes
+                    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
                         if (session) {
                             user.value = session.user;
-                            loadProfile();
+                            await loadProfile();
                             authState.value = 'dashboard';
                             fetchDebts();
                         } else {
                             user.value = null;
                             if (authState.value === 'dashboard') authState.value = 'landing';
                         }
+                        initIcons();
                     });
                 });
 
@@ -544,13 +556,24 @@
                     isLoadingAuth.value = true;
                     try {
                         if (authState.value === 'login') {
-                            const { error } = await supabaseClient.auth.signInWithPassword({ email: authData.value.email, password: authData.value.password });
+                            const { error } = await supabaseClient.auth.signInWithPassword({ 
+                                email: authData.value.email, 
+                                password: authData.value.password 
+                            });
                             if (error) throw error;
                         } else {
-                            const { data, error } = await supabaseClient.auth.signUp({ email: authData.value.email, password: authData.value.password });
+                            const { data, error } = await supabaseClient.auth.signUp({ 
+                                email: authData.value.email, 
+                                password: authData.value.password 
+                            });
                             if (error) throw error;
                             if (data.user) {
-                                await supabaseClient.from('profiles').upsert([{ id: data.user.id, name: authData.value.name, email: authData.value.email }]);
+                                await supabaseClient.from('profiles').upsert([{ 
+                                    id: data.user.id, 
+                                    name: authData.value.name, 
+                                    email: authData.value.email 
+                                }]);
+                                showToast("Profile Initialized");
                             }
                         }
                     } catch (e) {
@@ -561,11 +584,13 @@
                 };
 
                 const loadProfile = async () => {
+                    if (!user.value) return;
                     const { data } = await supabaseClient.from('profiles').select('*').eq('id', user.value.id).single();
                     if (data) userProfile.value = data;
                 };
 
                 const fetchDebts = async () => {
+                    if (!user.value) return;
                     const { data } = await supabaseClient.from('debts').select('*').order('created_at', { ascending: false });
                     if (data) debts.value = data;
                     initIcons();
@@ -579,37 +604,60 @@
                 };
 
                 const handleAddDebt = async (category) => {
+                    if (!user.value) return;
                     const { error } = await supabaseClient.from('debts').insert([{
-                        name: `New ${category}`, balance: 0, interest: 0, min_payment: 0, category, user_id: user.value.id
+                        name: `New ${category}`, 
+                        balance: 0, 
+                        interest: 0, 
+                        min_payment: 0, 
+                        category, 
+                        user_id: user.value.id
                     }]);
                     if (error) showToast("Cloud Error");
                     else fetchDebts();
                 };
 
                 const handleUpdateDebt = async (id, field, val) => {
+                    if (!user.value) return;
                     await supabaseClient.from('debts').update({ [field]: val }).eq('id', id);
                     fetchDebts();
                 };
 
                 const handleDeleteDebt = async (id) => {
+                    if (!user.value) return;
                     await supabaseClient.from('debts').delete().eq('id', id);
                     fetchDebts();
-                    showToast("Entry removed");
+                    showToast("Vector Erased");
                 };
 
                 const handleAddPayment = async () => {
                     const debt = activePaymentDebt.value;
-                    if (!debt || !paymentAmount.value) return;
+                    if (!debt || !paymentAmount.value || !user.value) return;
                     const newPayments = [...(debt.payments || []), { amount: paymentAmount.value, date: paymentDate.value, id: crypto.randomUUID() }];
                     const newBalance = Math.max(0, debt.balance - paymentAmount.value);
-                    await supabaseClient.from('debts').update({ balance: newBalance, payments: newPayments }).eq('id', debt.id);
-                    activePaymentDebt.value = null; paymentAmount.value = null;
-                    fetchDebts();
+                    const { error } = await supabaseClient.from('debts').update({ balance: newBalance, payments: newPayments }).eq('id', debt.id);
+                    if (!error) {
+                        activePaymentDebt.value = null; 
+                        paymentAmount.value = null;
+                        fetchDebts();
+                        showToast("Kaizen Executed");
+                    } else {
+                        showToast("Injection failed");
+                    }
                 };
 
-                const showToast = (msg) => { notification.value = msg; setTimeout(() => notification.value = null, 4000); };
-                const navigateTo = (page) => { currentPage.value = page; isMobileMenuOpen.value = false; initIcons(); };
-                const initIcons = () => setTimeout(() => lucide.createIcons(), 100);
+                const showToast = (msg) => { 
+                    notification.value = msg; 
+                    setTimeout(() => notification.value = null, 4000); 
+                };
+
+                const navigateTo = (page) => { 
+                    currentPage.value = page; 
+                    isMobileMenuOpen.value = false; 
+                    initIcons(); 
+                };
+
+                const initIcons = () => setTimeout(() => lucide.createIcons(), 150);
 
                 const totalBalance = computed(() => debts.value.reduce((s, d) => s + (parseFloat(d.balance) || 0), 0));
                 const totalPaid = computed(() => debts.value.reduce((s, d) => s + (d.payments?.reduce((ps, p) => ps + p.amount, 0) || 0), 0));
@@ -621,8 +669,8 @@
 
                 const mainStats = computed(() => [
                     { title: 'Total debt', value: totalBalance.value, icon: 'trending-down', color: 'bg-rose-500/80', sub: 'Outstanding' },
-                    { title: 'Minimum payments', value: totalMinPayment.value, icon: 'calendar', color: 'bg-amber-500/80', sub: 'Burn' },
-                    { title: 'total payments', value: totalMinPayment.value + extraPayment.value, icon: 'zap', color: 'bg-indigo-500/80', sub: 'Velocity' }
+                    { title: 'Minimum payments', value: totalMinPayment.value, icon: 'calendar', color: 'bg-amber-500/80', sub: 'Required Burn' },
+                    { title: 'total payments', value: totalMinPayment.value + extraPayment.value, icon: 'zap', color: 'bg-indigo-500/80', sub: 'Burn Velocity' }
                 ]);
 
                 const categoryProgress = computed(() => {
@@ -654,7 +702,7 @@
                 const userName = computed(() => userProfile.value?.name || 'Warrior');
                 const userInitial = computed(() => userName.value[0]?.toUpperCase() || 'U');
 
-                watch([authState, currentPage, activePaymentDebt], initIcons);
+                watch([authState, currentPage, activePaymentDebt], () => initIcons());
 
                 return {
                     authState, user, isLoading, isLoadingAuth, currentPage, isMobileMenuOpen, notification, debts, extraPayment, strategy,
