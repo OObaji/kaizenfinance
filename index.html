@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
@@ -33,6 +35,7 @@
             -webkit-appearance: none;
             background: #1E293B;
             border-radius: 10px;
+            height: 6px;
         }
 
         input[type="range"]::-webkit-slider-thumb {
@@ -43,6 +46,7 @@
             background: #6366F1;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            border: 2px solid #fff;
         }
 
         .animate-in {
@@ -66,26 +70,25 @@
             text-align: center;
             justify-content: center;
             flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
 <body>
-    <div id="deployment-error" class="flex">
-        <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Application Failed to Start</h1>
-        <p id="error-message" class="text-slate-400"></p>
-        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl">Retry Connection</button>
+    <div id="deployment-error">
+        <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Connection Error</h1>
+        <p id="error-message" class="text-slate-400 mb-4"></p>
+        <button onclick="location.reload()" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold">Retry Connection</button>
     </div>
 
     <div id="app" v-cloak>
         <!-- Landing Page -->
         <div v-if="authState === 'landing'" class="min-h-screen flex flex-col items-center justify-center p-6 text-center animate-in">
             <div class="mb-8">
-                <div class="relative w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-900/40 mx-auto rotate-3">
-                    <i data-lucide="arrow-up-right" class="w-12 h-12"></i>
-                </div>
+                <kaizen-logo size="64"></kaizen-logo>
             </div>
             <h1 class="text-5xl md:text-7xl font-black tracking-tighter mb-6 bg-gradient-to-r from-white to-slate-500 bg-clip-text text-transparent">Kaizen Finance</h1>
-            <p class="text-xl md:text-2xl text-slate-400 max-w-2xl mb-12 font-medium leading-relaxed">Continuous improvement for your financial future. Aggressively track and destroy your debts.</p>
+            <p class="text-xl md:text-2xl text-slate-400 max-w-2xl mb-12 font-medium leading-relaxed text-center">Continuous improvement for your financial future. Aggressively track and destroy your debts.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full mb-16 text-left">
                 <div v-for="feature in features" :key="feature.title" class="glass p-6 rounded-[2rem]">
@@ -107,114 +110,66 @@
             </div>
         </div>
 
-        <!-- Login Page -->
-        <div v-if="authState === 'login'" class="min-h-screen flex items-center justify-center p-6 animate-in">
+        <!-- Auth Pages -->
+        <div v-if="authState === 'login' || authState === 'register'" class="min-h-screen flex items-center justify-center p-6 animate-in">
             <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl">
-                <div class="flex flex-col items-center mb-10 text-center">
-                    <kaizen-logo size="32"></kaizen-logo>
-                    <h2 class="text-3xl font-black text-white mt-6 tracking-tighter">Welcome Back</h2>
-                    <p class="text-slate-500 text-sm mt-1">Enter your credentials to continue.</p>
+                <div class="flex flex-col items-center mb-10 text-center text-white">
+                    <kaizen-logo size="40"></kaizen-logo>
+                    <h2 class="text-3xl font-black mt-6 tracking-tighter">{{ authState === 'login' ? 'Welcome Back' : 'Join Kaizen' }}</h2>
+                    <p class="text-slate-500 text-sm mt-1">Destroy debt with precision.</p>
                 </div>
 
-                <form @submit.prevent="handleLogin" class="space-y-6 text-left">
-                    <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2">Username</label>
+                <form @submit.prevent="handleAuth" class="space-y-4 text-left">
+                    <div v-if="authState === 'register'">
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Full Name</label>
                         <div class="relative">
-                            <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
-                            <input v-model="loginUsername" type="text" required placeholder="yourusername" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 pl-12 pr-4 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                            <i data-lucide="user-circle" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
+                            <input v-model="authData.name" type="text" required placeholder="Alex Kaizen" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3 pl-12 pr-4 text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2">Password</label>
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Email</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
+                            <input v-model="authData.email" type="email" required placeholder="alex@kaizen.com" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3 pl-12 pr-4 text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Password</label>
                         <div class="relative">
                             <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
-                            <input v-model="loginPassword" :type="showPassword ? 'text' : 'password'" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 pl-12 pr-12 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                            <input v-model="authData.password" :type="showPassword ? 'text' : 'password'" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3 pl-12 pr-12 text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                             <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
                                 <i :data-lucide="showPassword ? 'eye-off' : 'eye'" class="w-5 h-5"></i>
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all">
-                        <span v-if="isLoadingAuth" class="flex items-center justify-center gap-2"><i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Processing...</span>
-                        <span v-else>Sign In</span>
+                    <button type="submit" :disabled="isLoadingAuth" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all mt-4 disabled:opacity-50">
+                        <span v-if="isLoadingAuth" class="flex items-center justify-center gap-2"><i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Working...</span>
+                        <span v-else>{{ authState === 'login' ? 'Sign In' : 'Create Account' }}</span>
                     </button>
                 </form>
                 
-                <p class="text-center mt-8 text-slate-500 text-sm font-medium">
-                    New to Kaizen? <button @click="authState = 'register'" class="text-indigo-400 font-bold hover:underline">Create an account</button>
-                </p>
-                <button @click="authState = 'landing'" class="w-full mt-4 text-slate-600 text-xs font-bold uppercase tracking-widest hover:text-slate-400 transition-colors">Back to Landing</button>
-            </div>
-        </div>
-
-        <!-- Register Page -->
-        <div v-if="authState === 'register'" class="min-h-screen flex items-center justify-center p-6 animate-in">
-            <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl">
-                <div class="flex flex-col items-center mb-8 text-center">
-                    <kaizen-logo size="32"></kaizen-logo>
-                    <h2 class="text-3xl font-black text-white mt-6 tracking-tighter">Join Kaizen</h2>
-                    <p class="text-slate-500 text-sm mt-1">Start your journey to debt freedom.</p>
-                </div>
-
-                <form @submit.prevent="handleRegister" class="space-y-4 text-left">
-                    <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5 ml-1">Full Name</label>
-                        <div class="relative">
-                            <i data-lucide="user-circle" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
-                            <input v-model="regName" type="text" required placeholder="Alex Kaizen" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5 ml-1">Email</label>
-                        <div class="relative">
-                            <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
-                            <input v-model="regEmail" type="email" required placeholder="alex@kaizen.com" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5 ml-1">Password</label>
-                        <div class="relative">
-                            <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
-                            <input v-model="regPassword" :type="showRegPassword ? 'text' : 'password'" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3.5 pl-12 pr-12 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                            <button type="button" @click="showRegPassword = !showRegPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-                                <i :data-lucide="showRegPassword ? 'eye-off' : 'eye'" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-black text-slate-500 uppercase tracking-widest block mb-1.5 ml-1">Confirm Password</label>
-                        <div class="relative">
-                            <i data-lucide="shield-check" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-5 h-5"></i>
-                            <input v-model="regConfirmPassword" :type="showRegConfirmPassword ? 'text' : 'password'" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-3.5 pl-12 pr-12 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                            <button type="button" @click="showRegConfirmPassword = !showRegConfirmPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-                                <i :data-lucide="showRegConfirmPassword ? 'eye-off' : 'eye'" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4.5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-all mt-4">
-                        <span v-if="isLoadingAuth" class="flex items-center justify-center gap-2"><i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Creating...</span>
-                        <span v-else>Create Account</span>
+                <p class="text-center mt-8 text-slate-500 text-sm">
+                    {{ authState === 'login' ? "New to Kaizen?" : "Already have an account?" }}
+                    <button @click="authState = authState === 'login' ? 'register' : 'login'" class="text-indigo-400 font-bold hover:underline">
+                        {{ authState === 'login' ? 'Create an account' : 'Login here' }}
                     </button>
-                </form>
-                
-                <p class="text-center mt-6 text-slate-500 text-sm font-medium">
-                    Already have an account? <button @click="authState = 'login'" class="text-indigo-400 font-bold hover:underline">Login here</button>
                 </p>
-                <button @click="authState = 'landing'" class="w-full mt-4 text-slate-600 text-xs font-bold uppercase tracking-widest hover:text-slate-400 transition-colors">Back to Landing</button>
+                <button @click="authState = 'landing'" class="w-full mt-4 text-slate-600 text-xs font-bold uppercase tracking-widest hover:text-slate-400">Back to Landing</button>
             </div>
         </div>
 
-        <!-- Main Dashboard Layout -->
+        <!-- Dashboard Layout -->
         <div v-if="authState === 'dashboard'" class="min-h-screen flex flex-col lg:flex-row">
             
             <!-- Mobile Navigation -->
             <div class="lg:hidden bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><i data-lucide="arrow-up-right" class="w-5 h-5"></i></div>
-                    <span class="text-lg font-black tracking-tighter">Kaizen Finance</span>
+                    <kaizen-logo size="24"></kaizen-logo>
+                    <span class="text-lg font-black tracking-tighter text-white">Kaizen Finance</span>
                 </div>
-                <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-slate-400 bg-slate-800 rounded-lg shadow-lg">
+                <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-slate-400 bg-slate-800 rounded-lg">
                     <i :data-lucide="isMobileMenuOpen ? 'x' : 'menu'"></i>
                 </button>
             </div>
@@ -222,14 +177,15 @@
             <!-- Sidebar -->
             <aside :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 w-80 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 flex flex-col z-[60] transition-transform duration-300 lg:translate-x-0 lg:static h-screen">
                 <div class="p-8 pb-4 flex items-center gap-3 shrink-0">
-                    <div class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white rotate-3 shadow-lg"><i data-lucide="arrow-up-right" class="w-6 h-6"></i></div>
+                    <kaizen-logo size="32"></kaizen-logo>
                     <div class="text-left text-white">
                         <span class="text-xl font-black tracking-tighter block leading-tight">Kaizen Finance</span>
                         <span class="text-[10px] text-indigo-400 font-black uppercase tracking-widest block">Continuous Growth</span>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto px-8 py-4 custom-scrollbar">
+                <!-- Menu Items -->
+                <div class="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
                     <nav class="flex flex-col gap-2">
                         <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 text-left">Main</p>
                         <button v-for="item in navItems" :key="item.id" @click="navigateTo(item.id)" :class="currentPage === item.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
@@ -246,20 +202,20 @@
                     </nav>
                 </div>
 
-                <!-- Profile and Goal section -->
+                <!-- Sidebar Footer -->
                 <div class="p-6 space-y-4 bg-slate-900/30 border-t border-slate-800/50">
-                    <div class="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800 shadow-inner">
+                    <div class="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800">
                         <div class="flex justify-between mb-3 text-white">
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Goal</span>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Repayment Progress</span>
                             <span class="text-indigo-400 font-black text-xs">{{ progressPercent }}%</span>
                         </div>
                         <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5">
-                            <div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_#6366f1]" :style="{ width: progressPercent + '%' }"></div>
+                            <div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full transition-all duration-1000" :style="{ width: progressPercent + '%' }"></div>
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-4 glass rounded-[1.5rem] shadow-xl">
                         <div class="flex items-center gap-4 flex-1 min-w-0">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white shadow-lg">{{ userInitial }}</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white capitalize shadow-lg">{{ userName?.[0] || 'U' }}</div>
                             <div class="text-left min-w-0">
                                 <p class="text-sm font-black text-white truncate w-full capitalize leading-tight mb-1">{{ userName }}</p>
                                 <div class="flex items-center gap-1 text-[9px] text-emerald-500 font-black uppercase"><i data-lucide="shield-check" class="w-3 h-3"></i> Destroyer</div>
@@ -275,7 +231,6 @@
                 
                 <!-- Dashboard View -->
                 <div v-if="currentPage === 'dashboard'" class="space-y-8">
-                    <!-- Journey Track -->
                     <div class="glass p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
                         <div class="flex items-center justify-between mb-12">
                             <div class="text-left text-white">
@@ -284,7 +239,6 @@
                             </div>
                             <div class="text-right">
                                 <span class="text-5xl font-black text-indigo-500 tracking-tighter">{{ progressPercent }}%</span>
-                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 text-right">Total Completion</p>
                             </div>
                         </div>
                         <div class="relative pt-10 pb-16 px-4">
@@ -303,24 +257,22 @@
                             </div>
                         </div>
                         <div class="mt-8 flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-900/50 w-fit px-4 py-2 rounded-full border border-slate-700 shadow-inner">
-                            <i data-lucide="check-circle-2" class="text-emerald-500 w-4 h-4"></i> Total Kaizen: <span class="text-slate-200 ml-1 font-black uppercase tracking-widest">£{{ totalPaid.toLocaleString() }} paid</span>
+                            <i data-lucide="check-circle-2" class="text-emerald-500 w-4 h-4"></i> Total Kaizen: <span class="text-slate-200 ml-1 font-black">£{{ totalPaid.toLocaleString() }} paid</span>
                         </div>
                     </div>
 
-                    <!-- Core Stats -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div v-for="stat in mainStats" :key="stat.title" class="glass p-6 rounded-[2rem] text-left hover:border-indigo-500/30 transition-all group">
                             <div :class="stat.color" class="p-3 rounded-2xl text-white w-fit mb-4 shadow-inner group-hover:scale-110 transition-transform"><i :data-lucide="stat.icon"></i></div>
-                            <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest text-left">{{ stat.title }}</h3>
+                            <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest">{{ stat.title }}</h3>
                             <div class="flex items-baseline gap-1 mt-1 text-white"><span class="text-3xl font-black">£{{ stat.value.toLocaleString() }}</span></div>
                             <p class="text-[10px] text-slate-500 mt-2 font-medium flex items-center gap-1"><i data-lucide="shield-check" class="text-emerald-500 w-3 h-3"></i> {{ stat.sub }}</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
-                        <!-- Repayment Focused Categories -->
-                        <div class="glass p-8 rounded-[2.5rem] text-left shadow-xl">
-                            <h2 class="text-xl font-black text-white mb-8 flex items-center gap-2"><i data-lucide="filter" class="text-indigo-400"></i> Repayment Progress</h2>
+                        <div class="glass p-8 rounded-[2.5rem] shadow-xl">
+                            <h2 class="text-xl font-black text-white mb-8 flex items-center gap-2"><i data-lucide="filter" class="text-indigo-400"></i> Category Progress</h2>
                             <div class="space-y-4">
                                 <div v-for="(stat, key) in categoryProgress" :key="key" @click="navigateTo(stat.id)" class="group flex items-center justify-between p-5 rounded-2xl hover:bg-slate-700/50 cursor-pointer border border-transparent hover:border-slate-700 transition-all active:scale-[0.98]">
                                     <div class="flex items-center gap-4 text-left">
@@ -346,7 +298,6 @@
                             </div>
                         </div>
 
-                        <!-- Momentum Control -->
                         <div class="bg-indigo-950/50 text-white p-10 rounded-[2.5rem] border border-indigo-500/20 shadow-2xl relative overflow-hidden flex flex-col justify-between">
                             <div class="relative z-10 text-left">
                                 <h3 class="text-3xl font-black mb-2 tracking-tight italic text-left">Momentum Engine</h3>
@@ -357,68 +308,15 @@
                                             <span class="text-indigo-400 font-bold text-xs uppercase tracking-widest text-left">Monthly Power-Up</span>
                                             <div class="text-right text-white"><span class="text-4xl font-black text-white">£{{ extraPayment }}</span></div>
                                         </div>
-                                        <input type="range" min="0" max="5000" step="50" v-model.number="extraPayment" class="w-full h-3 bg-indigo-900 rounded-lg appearance-none cursor-pointer accent-white border border-indigo-800 shadow-xl">
+                                        <input type="range" min="0" max="5000" step="50" v-model.number="extraPayment" class="w-full h-3 bg-indigo-900 rounded-lg appearance-none cursor-pointer accent-white border border-indigo-800">
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <button @click="strategy = 'snowball'" :class="strategy === 'snowball' ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Snowball</button>
-                                        <button @click="strategy = 'avalanche'" :class="strategy === 'avalanche' ? 'bg-indigo-500 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Avalanche</button>
+                                        <button @click="strategy = 'avalanche'" :class="strategy === 'avalanche' ? 'bg-indigo-50 text-white border-indigo-400 shadow-[0_0_15px_#6366f1]' : 'bg-transparent text-indigo-400 border-indigo-800'" class="py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-widest border transition-all">Avalanche</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="absolute -bottom-20 -right-20 text-indigo-500/5 rotate-12 pointer-events-none"><i data-lucide="zap" class="w-[400px] h-[400px]"></i></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Category Items -->
-                <div v-if="isCategoryPage" class="animate-in space-y-8 text-left">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
-                        <div class="flex items-center gap-6 text-left">
-                            <div :class="activeCategoryColor" class="p-4 rounded-[1.5rem] text-white shadow-2xl rotate-3"><i :data-lucide="activeCategoryIcon" class="w-10 h-10"></i></div>
-                            <div class="text-left">
-                                <h2 class="text-4xl font-black text-white tracking-tighter text-left">{{ activeCategoryTitle }}</h2>
-                                <p class="text-slate-500 text-sm font-medium text-left italic">Total Outstanding: <span class="text-white font-bold not-italic">£{{ activeCategoryTotal.toLocaleString() }}</span></p>
-                            </div>
-                        </div>
-                        <button @click="handleAddDebt(activeCategoryKey)" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl active:scale-95 border border-white/5 group">
-                            <i data-lucide="plus-circle" class="group-hover:rotate-90 transition-transform"></i> Add New Data Point
-                        </button>
-                    </div>
-
-                    <div class="space-y-4 text-left">
-                        <div v-if="filteredDebts.length === 0" class="glass border-2 border-dashed border-slate-700/50 py-20 rounded-[2.5rem] text-center flex flex-col items-center gap-4">
-                            <i data-lucide="target" class="w-12 h-12 text-slate-700"></i>
-                            <p class="text-slate-600 font-bold uppercase tracking-widest text-xs">This variable is cleared.</p>
-                        </div>
-                        <div v-for="debt in filteredDebts" :key="debt.id" class="bg-slate-800/80 p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 transition-all border-l-[6px]" :style="{ borderLeftColor: 'currentColor' }">
-                            <div class="flex-1 w-full text-left">
-                                <div class="flex items-center gap-3 mb-6 text-left">
-                                    <input v-model="debt.name" @change="handleUpdateDebt(debt.id, 'name', debt.name)" class="text-2xl font-black bg-slate-900/50 focus:bg-slate-900 border-b-2 border-transparent focus:border-indigo-500 transition-all p-3 w-full rounded-t-xl outline-none text-white shadow-inner" placeholder="Label...">
-                                    <button @click="activePaymentDebt = debt" class="p-3 bg-slate-700/50 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 rounded-2xl transition-all flex items-center gap-2 font-black text-xs shrink-0 uppercase tracking-widest">
-                                        <i data-lucide="history" class="w-5 h-5"></i> <span>History</span>
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-5 text-left">
-                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5 text-left">
-                                        <i data-lucide="percent" class="text-indigo-400 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">APR:</span>
-                                        <input type="number" v-model.number="debt.interest" @change="handleUpdateDebt(debt.id, 'interest', debt.interest)" class="w-12 bg-transparent outline-none text-slate-100 font-black text-sm">%
-                                    </div>
-                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5 text-left">
-                                        <i data-lucide="clock" class="text-amber-500 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">Min:</span>
-                                        <span class="text-white text-sm">£</span><input type="number" v-model.number="debt.minPayment" @change="handleUpdateDebt(debt.id, 'minPayment', debt.minPayment)" class="w-20 bg-transparent outline-none text-slate-100 font-black text-sm">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-10 w-full md:w-auto border-t md:border-t-0 border-slate-700 pt-8 md:pt-0 justify-end">
-                                <div class="text-right flex-1 md:flex-none text-right">
-                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 text-right">Current Value</p>
-                                    <div class="flex items-center justify-end gap-2 bg-slate-900/80 px-6 py-4 rounded-3xl border border-white/5 shadow-inner focus-within:border-indigo-500/50 transition-all text-right">
-                                        <span class="text-2xl font-black text-slate-600 leading-none">£</span>
-                                        <input type="number" v-model.number="debt.balance" @change="handleUpdateDebt(debt.id, 'balance', debt.balance)" class="text-4xl font-black text-white bg-transparent border-none outline-none w-36 text-right leading-none">
-                                    </div>
-                                </div>
-                                <button @click="handleDeleteDebt(debt.id)" class="p-5 glass text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all shadow-xl"><i data-lucide="trash-2" class="w-6 h-6"></i></button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -439,21 +337,74 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Category Page -->
+                <div v-if="isCategoryPage" class="animate-in space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 text-left">
+                        <div class="flex items-center gap-6">
+                            <div :class="activeCategoryColor" class="p-4 rounded-[1.5rem] text-white shadow-2xl rotate-3"><i :data-lucide="activeCategoryIcon" class="w-10 h-10"></i></div>
+                            <div class="text-left">
+                                <h2 class="text-4xl font-black text-white tracking-tighter">{{ activeCategoryTitle }}</h2>
+                                <p class="text-slate-500 text-sm font-medium italic">Total Outstanding: <span class="text-white font-bold not-italic">£{{ activeCategoryTotal.toLocaleString() }}</span></p>
+                            </div>
+                        </div>
+                        <button @click="handleAddDebt(activeCategoryKey)" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl active:scale-95 border border-white/5">
+                            <i data-lucide="plus-circle"></i> Add New Entry
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div v-if="filteredDebts.length === 0" class="glass border-2 border-dashed border-slate-700/50 py-20 rounded-[2.5rem] text-center flex flex-col items-center gap-4">
+                            <i data-lucide="target" class="w-12 h-12 text-slate-700"></i>
+                            <p class="text-slate-600 font-bold uppercase tracking-widest text-xs">Category Clear.</p>
+                        </div>
+                        <div v-for="debt in filteredDebts" :key="debt.id" class="bg-slate-800/80 p-6 md:p-8 rounded-[2.5rem] border border-slate-700/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 transition-all border-l-[6px]" :style="{ borderLeftColor: 'currentColor' }">
+                            <div class="flex-1 w-full text-left">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <input v-model="debt.name" @change="handleUpdateDebt(debt.id, 'name', debt.name)" class="text-2xl font-black bg-slate-900/50 focus:bg-slate-900 border-b-2 border-transparent focus:border-indigo-500 transition-all p-3 w-full rounded-t-xl outline-none text-white shadow-inner" placeholder="Entry Label...">
+                                    <button @click="activePaymentDebt = debt" class="p-3 bg-slate-700/50 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 rounded-2xl transition-all flex items-center gap-2 font-black text-xs shrink-0 uppercase tracking-widest">
+                                        <i data-lucide="history" class="w-5 h-5"></i> <span>History</span>
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-5">
+                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5">
+                                        <i data-lucide="percent" class="text-indigo-400 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">APR:</span>
+                                        <input type="number" v-model.number="debt.interest" @change="handleUpdateDebt(debt.id, 'interest', debt.interest)" class="w-12 bg-transparent outline-none text-slate-100 font-black text-sm">%
+                                    </div>
+                                    <div class="flex items-center gap-3 text-[10px] font-black text-slate-500 bg-slate-900/50 px-4 py-2.5 rounded-2xl border border-white/5">
+                                        <i data-lucide="clock" class="text-amber-500 w-4 h-4"></i> <span class="uppercase tracking-widest opacity-60">Min:</span>
+                                        <span class="text-white text-sm">£</span><input type="number" v-model.number="debt.min_payment" @change="handleUpdateDebt(debt.id, 'min_payment', debt.min_payment)" class="w-20 bg-transparent outline-none text-slate-100 font-black text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-10 w-full md:w-auto border-t md:border-t-0 border-slate-700 pt-8 md:pt-0">
+                                <div class="text-right flex-1 md:flex-none">
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2">Current Balance</p>
+                                    <div class="flex items-center justify-end gap-2 bg-slate-900/80 px-6 py-4 rounded-3xl border border-white/5 shadow-inner focus-within:border-indigo-500/50 transition-all">
+                                        <span class="text-2xl font-black text-slate-600 leading-none">£</span>
+                                        <input type="number" v-model.number="debt.balance" @change="handleUpdateDebt(debt.id, 'balance', debt.balance)" class="text-4xl font-black text-white bg-transparent border-none outline-none w-36 text-right leading-none">
+                                    </div>
+                                </div>
+                                <button @click="handleDeleteDebt(debt.id)" class="p-5 glass text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all shadow-xl"><i data-lucide="trash-2" class="w-6 h-6"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
 
         <!-- History Modal -->
         <div v-if="activePaymentDebt" class="fixed inset-0 z-[100] flex items-center justify-end bg-slate-950/90 backdrop-blur-xl animate-in">
             <div class="w-full max-w-md h-full bg-slate-900 border-l border-white/5 shadow-2xl p-10 flex flex-col transition-transform duration-500">
-                <div class="flex justify-between items-center mb-12 text-left">
+                <div class="flex justify-between items-center mb-12 text-left shrink-0">
                     <div class="text-left text-white">
-                        <h3 class="text-3xl font-black tracking-tighter">Injection Log</h3>
-                        <p class="text-slate-500 text-sm font-bold mt-2 uppercase tracking-widest border-b border-indigo-500/30 pb-2">{{ activePaymentDebt.name }}</p>
+                        <h3 class="text-3xl font-black tracking-tighter text-left">Injection Log</h3>
+                        <p class="text-slate-500 text-sm font-bold mt-2 uppercase tracking-widest border-b border-indigo-500/30 pb-2 text-left">{{ activePaymentDebt.name }}</p>
                     </div>
                     <button @click="activePaymentDebt = null" class="p-3 bg-slate-800 rounded-2xl text-slate-400 hover:text-white transition-all shadow-xl"><i data-lucide="x"></i></button>
                 </div>
                 <form @submit.prevent="handleAddPayment" class="p-8 rounded-[2.5rem] bg-indigo-600/5 border border-indigo-500/10 mb-12 text-left shadow-2xl">
-                    <div class="space-y-6">
+                    <div class="space-y-6 text-left">
                         <div class="flex items-center gap-4 bg-slate-950 p-5 rounded-3xl border border-white/5 focus-within:ring-2 focus-within:ring-indigo-500 shadow-inner">
                             <span class="text-3xl font-black text-slate-600">£</span>
                             <input v-model.number="paymentAmount" type="number" step="0.01" required placeholder="0.00" class="w-full text-4xl font-black focus:outline-none bg-transparent text-white">
@@ -462,55 +413,48 @@
                             <i data-lucide="calendar" class="text-slate-500 w-6 h-6"></i>
                             <input v-model="paymentDate" type="date" required class="w-full font-bold text-slate-300 focus:outline-none bg-transparent [color-scheme:dark]">
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 rounded-3xl font-black text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)] active:scale-95 transition-all uppercase tracking-widest">Confirm Injection</button>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-6 rounded-3xl font-black text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)] active:scale-95 transition-all uppercase tracking-widest">Confirm Injection</button>
                     </div>
                 </form>
                 <div class="flex-1 overflow-y-auto custom-scrollbar pr-4 text-left">
                     <div class="space-y-4 pb-10 text-left">
                         <div v-for="pay in sortedPayments" :key="pay.id" class="flex items-center justify-between p-5 glass rounded-[2rem] border-white/5 text-left group">
-                            <div class="flex items-center gap-4 text-left">
+                            <div class="flex items-center gap-4 text-left text-white">
                                 <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform"><i data-lucide="check" class="w-5 h-5"></i></div>
                                 <div class="text-left">
                                     <p class="font-black text-white text-xl leading-none mb-1">£{{ pay.amount.toLocaleString() }}</p>
                                     <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ pay.date }}</p>
                                 </div>
                             </div>
-                            <span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-3 py-1 rounded-full shadow-lg border border-emerald-500/20">Crushed</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Notification -->
-        <div v-if="notification" class="fixed bottom-10 right-10 z-[110] bg-indigo-600 text-white px-8 py-5 rounded-full shadow-[0_0_50px_rgba(99,102,241,0.5)] flex items-center gap-4 animate-in border border-white/20">
-            <i data-lucide="zap" class="text-indigo-200 w-6 h-6"></i>
-            <span class="font-black text-base tracking-tight italic uppercase">{{ notification }}</span>
+        <!-- Notification Toast -->
+        <div v-if="notification" class="fixed bottom-10 right-10 z-[110] bg-indigo-600 text-white px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in border border-white/20">
+            <i data-lucide="zap" class="text-indigo-200"></i>
+            <span class="font-black text-sm tracking-tight italic uppercase">{{ notification }}</span>
         </div>
     </div>
 
-    <!-- Firebase SDK Modules -->
+    <!-- Scripts -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, query } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-
         // Global error capture
         window.onerror = function(msg, url, line) {
             const errEl = document.getElementById('deployment-error');
             if(errEl) {
                 errEl.style.display = 'flex';
-                document.getElementById('error-message').innerText = `Critical Initialization Failure: ${msg}`;
+                document.getElementById('error-message').innerText = `Critical Error: ${msg} (Line ${line})`;
             }
         };
 
-        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-        const firebaseConfig = JSON.parse(configStr);
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'kaizen-finance-v1';
+        const SUPABASE_URL = 'https://clstohryamyzfwfymrrr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsc3RvaHJ5YW15emZ3dGZ5bXJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMTI0NjgsImV4cCI6MjA4NTY4ODQ2OH0.NIef4prO_6ei9GCl2fUGgL-wEZkCdToiqfa215oic5s';
+        
+        // Initialize Supabase correctly using window object to avoid ReferenceError shadowing
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const { createApp, ref, computed, onMounted, watch } = Vue;
 
@@ -519,7 +463,7 @@
             template: `
                 <div class="relative flex items-center justify-center" :style="{ width: parseInt(size) + 16 + 'px', height: parseInt(size) + 16 + 'px' }">
                     <div class="absolute inset-0 bg-indigo-600 rounded-[1.25rem] rotate-6 opacity-20 animate-pulse"></div>
-                    <div class="relative w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[1.25rem] flex items-center justify-center text-white shadow-2xl">
+                    <div class="relative w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[1.25rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-900/40">
                         <svg :width="size" :height="size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 20h18"></path>
                             <path d="M16 4l5 5-5 5"></path>
@@ -545,23 +489,15 @@
                 const extraPayment = ref(200);
                 const strategy = ref('snowball');
                 
-                const loginUsername = ref('');
-                const loginPassword = ref('');
+                const authData = ref({ email: '', password: '', name: '' });
                 const showPassword = ref(false);
-
-                const regName = ref('');
-                const regEmail = ref('');
-                const regPassword = ref('');
-                const regConfirmPassword = ref('');
-                const showRegPassword = ref(false);
-                const showRegConfirmPassword = ref(false);
 
                 const activePaymentDebt = ref(null);
                 const paymentAmount = ref(null);
                 const paymentDate = ref(new Date().toISOString().split('T')[0]);
 
                 const navItems = [
-                    { id: 'dashboard', label: 'Overview', icon: 'layout-dashboard' },
+                    { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
                     { id: 'info', label: 'Academy', icon: 'info' },
                 ];
 
@@ -573,109 +509,111 @@
                 ];
 
                 const features = [
-                    { title: 'Velocity Tracking', desc: 'Visualize exactly how extra injections crush your debt balance.', icon: 'zap', color: 'bg-indigo-600' },
+                    { title: 'Momentum Engine', desc: 'Visualize exactly how extra injections crush your debt balance.', icon: 'zap', color: 'bg-indigo-600' },
                     { title: 'The 70% Marker', desc: 'Celebrate the critical threshold where freedom becomes a certainty.', icon: 'trophy', color: 'bg-emerald-600' },
-                    { title: 'Strategic Logic', desc: 'Seamlessly switch between psychological Snowball or math-heavy Avalanche.', icon: 'shield-check', color: 'bg-blue-600' }
+                    { title: 'Cloud Logic', desc: 'Real-time synchronization across devices powered by Supabase.', icon: 'shield-check', color: 'bg-blue-600' }
                 ];
 
-                const markers = [
-                    { p: 0, l: 'Launch' }, { p: 25, l: 'Cruising' }, { p: 50, l: 'Midpoint' }, { p: 70, l: 'Home Stretch', target: true }, { p: 100, l: 'FREEDOM' }
-                ];
+                const markers = [{ p: 0, l: 'Launch' }, { p: 25, l: 'Quarter' }, { p: 50, l: 'Half' }, { p: 70, l: 'Home Stretch', target: true }, { p: 100, l: 'FREEDOM' }];
 
-                const initAuth = async () => {
-                    try {
-                        const initUnsubscribe = onAuthStateChanged(auth, async (u) => {
-                            if (u) {
-                                user.value = { uid: u.uid };
-                                const profileRef = doc(db, 'artifacts', appId, 'users', u.uid, 'profile', 'data');
-                                onSnapshot(profileRef, (snap) => {
-                                    if (snap.exists()) userProfile.value = snap.data();
-                                });
-                                authState.value = 'dashboard';
-                                syncData();
-                            } else if (authState.value === 'dashboard') {
-                                authState.value = 'landing';
-                            }
-                            isLoading.value = false;
-                            initIcons();
-                        });
-                    } catch (err) {
-                        isLoading.value = false;
-                        console.error(err);
+                onMounted(async () => {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session) {
+                        user.value = session.user;
+                        await loadProfile();
+                        authState.value = 'dashboard';
+                        fetchDebts();
                     }
-                };
-
-                onMounted(() => {
-                    initAuth();
-                    document.getElementById('deployment-error').style.display = 'none';
+                    isLoading.value = false;
+                    initIcons();
+                    
+                    supabaseClient.auth.onAuthStateChange((_event, session) => {
+                        if (session) {
+                            user.value = session.user;
+                            loadProfile();
+                            authState.value = 'dashboard';
+                            fetchDebts();
+                        } else {
+                            user.value = null;
+                            if (authState.value === 'dashboard') authState.value = 'landing';
+                        }
+                    });
                 });
 
-                const handleLogin = async () => {
+                const handleAuth = async () => {
+                    isLoadingAuth.value = true;
                     try {
-                        isLoadingAuth.value = true;
-                        await signInAnonymously(auth);
-                        showToast("Welcome back");
+                        if (authState.value === 'login') {
+                            const { error } = await supabaseClient.auth.signInWithPassword({ email: authData.value.email, password: authData.value.password });
+                            if (error) throw error;
+                        } else {
+                            const { data, error } = await supabaseClient.auth.signUp({ email: authData.value.email, password: authData.value.password });
+                            if (error) throw error;
+                            if (data.user) {
+                                await supabaseClient.from('profiles').upsert([{ id: data.user.id, name: authData.value.name, email: authData.value.email }]);
+                            }
+                        }
                     } catch (e) {
-                        showToast("Authentication Failed");
+                        showToast(e.message);
                     } finally {
                         isLoadingAuth.value = false;
                     }
                 };
 
-                const handleRegister = async () => {
-                    if (regPassword.value !== regConfirmPassword.value) {
-                        showToast("Mismatch detected");
-                        return;
-                    }
-                    try {
-                        isLoadingAuth.value = true;
-                        const cred = await signInAnonymously(auth);
-                        const profileRef = doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data');
-                        await setDoc(profileRef, {
-                            name: regName.value,
-                            email: regEmail.value,
-                            createdAt: new Date().toISOString()
-                        });
-                        showToast("Profile Initialized");
-                    } catch (e) {
-                        showToast("System error");
-                    } finally {
-                        isLoadingAuth.value = false;
-                    }
+                const loadProfile = async () => {
+                    const { data } = await supabaseClient.from('profiles').select('*').eq('id', user.value.id).single();
+                    if (data) userProfile.value = data;
                 };
 
-                const handleLogout = () => {
-                    signOut(auth);
+                const fetchDebts = async () => {
+                    const { data } = await supabaseClient.from('debts').select('*').order('created_at', { ascending: false });
+                    if (data) debts.value = data;
+                    initIcons();
+                };
+
+                const handleLogout = async () => {
+                    await supabaseClient.auth.signOut();
                     authState.value = 'landing';
                     debts.value = [];
                     userProfile.value = { name: 'Kaizen Warrior' };
                 };
 
-                const syncData = () => {
-                    if (!user.value) return;
-                    const debtsRef = collection(db, 'artifacts', appId, 'users', user.value.uid, 'debts');
-                    onSnapshot(debtsRef, (snapshot) => {
-                        debts.value = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                        initIcons();
-                    }, (err) => showToast("Cloud Sync Error"));
+                const handleAddDebt = async (category) => {
+                    const { error } = await supabaseClient.from('debts').insert([{
+                        name: `New ${category}`, balance: 0, interest: 0, min_payment: 0, category, user_id: user.value.id
+                    }]);
+                    if (error) showToast("Cloud Error");
+                    else fetchDebts();
                 };
 
-                const showToast = (msg) => {
-                    notification.value = msg;
-                    setTimeout(() => notification.value = null, 4000);
+                const handleUpdateDebt = async (id, field, val) => {
+                    await supabaseClient.from('debts').update({ [field]: val }).eq('id', id);
+                    fetchDebts();
                 };
 
-                const navigateTo = (page) => {
-                    currentPage.value = page;
-                    isMobileMenuOpen.value = false;
-                    initIcons();
+                const handleDeleteDebt = async (id) => {
+                    await supabaseClient.from('debts').delete().eq('id', id);
+                    fetchDebts();
+                    showToast("Entry removed");
                 };
 
+                const handleAddPayment = async () => {
+                    const debt = activePaymentDebt.value;
+                    if (!debt || !paymentAmount.value) return;
+                    const newPayments = [...(debt.payments || []), { amount: paymentAmount.value, date: paymentDate.value, id: crypto.randomUUID() }];
+                    const newBalance = Math.max(0, debt.balance - paymentAmount.value);
+                    await supabaseClient.from('debts').update({ balance: newBalance, payments: newPayments }).eq('id', debt.id);
+                    activePaymentDebt.value = null; paymentAmount.value = null;
+                    fetchDebts();
+                };
+
+                const showToast = (msg) => { notification.value = msg; setTimeout(() => notification.value = null, 4000); };
+                const navigateTo = (page) => { currentPage.value = page; isMobileMenuOpen.value = false; initIcons(); };
                 const initIcons = () => setTimeout(() => lucide.createIcons(), 100);
 
-                const totalBalance = computed(() => debts.value.reduce((s, d) => s + (d.balance || 0), 0));
+                const totalBalance = computed(() => debts.value.reduce((s, d) => s + (parseFloat(d.balance) || 0), 0));
                 const totalPaid = computed(() => debts.value.reduce((s, d) => s + (d.payments?.reduce((ps, p) => ps + p.amount, 0) || 0), 0));
-                const totalMinPayment = computed(() => debts.value.reduce((s, d) => s + (d.minPayment || 0), 0));
+                const totalMinPayment = computed(() => debts.value.reduce((s, d) => s + (parseFloat(d.min_payment) || 0), 0));
                 const progressPercent = computed(() => {
                     const original = totalBalance.value + totalPaid.value;
                     return original > 0 ? Math.round((totalPaid.value / original) * 100) : 0;
@@ -683,15 +621,15 @@
 
                 const mainStats = computed(() => [
                     { title: 'Total debt', value: totalBalance.value, icon: 'trending-down', color: 'bg-rose-500/80', sub: 'Outstanding' },
-                    { title: 'Minimum payments', value: totalMinPayment.value, icon: 'calendar', color: 'bg-amber-500/80', sub: 'Required Monthly' },
-                    { title: 'total payments', value: totalMinPayment.value + extraPayment.value, icon: 'zap', color: 'bg-indigo-500/80', sub: 'Aggressive Velocity' }
+                    { title: 'Minimum payments', value: totalMinPayment.value, icon: 'calendar', color: 'bg-amber-500/80', sub: 'Burn' },
+                    { title: 'total payments', value: totalMinPayment.value + extraPayment.value, icon: 'zap', color: 'bg-indigo-500/80', sub: 'Velocity' }
                 ]);
 
                 const categoryProgress = computed(() => {
                     const stats = {};
                     categories.forEach(c => {
                         const items = debts.value.filter(d => d.category === c.key);
-                        const bal = items.reduce((s, d) => s + (d.balance || 0), 0);
+                        const bal = items.reduce((s, d) => s + (parseFloat(d.balance) || 0), 0);
                         const paid = items.reduce((s, d) => s + (d.payments?.reduce((ps, p) => ps + p.amount, 0) || 0), 0);
                         const original = bal + paid;
                         stats[c.key] = {
@@ -713,64 +651,18 @@
                 const filteredDebts = computed(() => debts.value.filter(d => d.category === activeCategoryKey.value));
                 const sortedPayments = computed(() => activePaymentDebt.value?.payments ? [...activePaymentDebt.value.payments].sort((a,b) => new Date(b.date) - new Date(a.date)) : []);
 
-                const handleAddDebt = async (category) => {
-                    if (!user.value) return;
-                    try {
-                        const debtsRef = collection(db, 'artifacts', appId, 'users', user.value.uid, 'debts');
-                        await addDoc(debtsRef, {
-                            name: `New ${category}`, balance: 0, interest: 0, minPayment: 0,
-                            category, payments: [], createdAt: new Date().toISOString()
-                        });
-                        showToast("Vector Created");
-                    } catch (e) { showToast("Sync Denied"); }
-                };
-
-                const handleUpdateDebt = async (id, field, val) => {
-                    if (!user.value) return;
-                    try {
-                        const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', id);
-                        await updateDoc(debtDoc, { [field]: field === 'name' ? val : (parseFloat(val) || 0) });
-                    } catch (e) {}
-                };
-
-                const handleDeleteDebt = async (id) => {
-                    if (!user.value) return;
-                    try {
-                        const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', id);
-                        await deleteDoc(debtDoc);
-                        showToast("Vector Erased");
-                    } catch (e) {}
-                };
-
-                const handleAddPayment = async () => {
-                    const debt = activePaymentDebt.value;
-                    if (!debt || !paymentAmount.value || !user.value) return;
-                    const debtDoc = doc(db, 'artifacts', appId, 'users', user.value.uid, 'debts', debt.id);
-                    try {
-                        const newPayment = { amount: paymentAmount.value, date: paymentDate.value, id: crypto.randomUUID() };
-                        await updateDoc(debtDoc, {
-                            balance: Math.max(0, debt.balance - paymentAmount.value),
-                            payments: [...(debt.payments || []), newPayment]
-                        });
-                        activePaymentDebt.value = null; paymentAmount.value = null;
-                        showToast("Kaizen Executed");
-                    } catch (e) { showToast("Logic Overflow"); }
-                };
-
                 const userName = computed(() => userProfile.value?.name || 'Warrior');
-                const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
+                const userInitial = computed(() => userName.value[0]?.toUpperCase() || 'U');
 
                 watch([authState, currentPage, activePaymentDebt], initIcons);
 
                 return {
                     authState, user, isLoading, isLoadingAuth, currentPage, isMobileMenuOpen, notification, debts, extraPayment, strategy,
-                    loginUsername, loginPassword, showPassword,
-                    regName, regEmail, regPassword, regConfirmPassword, showRegPassword, showRegConfirmPassword,
-                    navItems, categories, features, markers, navigateTo, totalBalance, totalPaid, totalMinPayment,
+                    authData, showPassword, navigateTo, totalBalance, totalPaid, totalMinPayment,
                     progressPercent, mainStats, categoryProgress, isCategoryPage, activeCategoryTitle, activeCategoryIcon,
                     activeCategoryColor, activeCategoryTotal, filteredDebts, handleAddDebt, handleUpdateDebt, handleDeleteDebt,
                     activePaymentDebt, paymentAmount, paymentDate, handleAddPayment, sortedPayments, activeCategoryKey,
-                    userName, userInitial, handleLogin, handleRegister, handleLogout
+                    userName, userInitial, handleAuth, handleLogout, navItems, categories, features, markers
                 };
             }
         }).mount('#app');
